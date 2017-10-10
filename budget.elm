@@ -1,8 +1,9 @@
 module Main exposing (main)
 
-import Time.Date exposing (..)
-import Time exposing (..)
-import Task
+import Model exposing (init, Model)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 main = program
       { init = init
@@ -12,7 +13,7 @@ main = program
       }
 
 type Msg
-    = CategoryChange String
+    = CategoryTyping String
     | NewCategory
     | NewTimer
 
@@ -20,17 +21,38 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
     case msg of
         NewCategory ->
-          let
-            newCat = model.ui.possibleName
-          in
-            {model | weeks = (Category 0 [] newCat) :: model.weeks} ! []
+          model ! []
 
-        CategoryChange str ->
-          let
-            u = model.ui
-            newUI = {u | possibleName = str}
-          in
-            {model | ui = newUI} ! []
+        CategoryTyping str ->
+          {model | possibleName = str} ! []
 
         NewTimer ->
           model ! []
+
+
+view model =
+    div []
+        [ topBar
+        , liveBar model.live
+--        , budgetBar model.weeks
+        ]
+
+topBar =
+    div [ id "topBar" ]
+        [ button [ onClick NewTimer ] [ text "Add Timer" ]
+        , input [ onInput CategoryTyping] []
+        , button [ onClick NewCategory ] [ text "Add Category" ]
+        ]
+
+liveBar timer =
+  case timer of
+      Nothing -> div [] []
+      Just time -> div [] [text (toString time)]
+
+budgetBar cats =
+    div [ class "budgetbar" ]
+        [ div [ class "budgeted" ]
+            [ text "Budgeted"
+--            , List.map cats
+            ]
+        ]

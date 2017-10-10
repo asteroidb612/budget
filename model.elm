@@ -1,25 +1,34 @@
-import Monocle.Lens exposing (Lens)
+module Model exposing (init, Model)
+
 import Maybe exposing (Maybe(..))
+import Time exposing (Time)
 
-type alias Entry =
-  { start : Time
-  , stop : Time }
+type Entry = Open Time | Closed Time Time
 
-type alias Category =
+duration : Entry -> Maybe Time
+duration e =
+  case e of
+    Closed start stop ->  stop - start |> Just
+    Open _ -> Nothing
+
+type alias Activity =
   { budgeted : Int
   , spent : List Entry
   , name : String }
 
-type alias Week =
-  {categories: List Category}
-
-type alias Interface =
-  { live : Maybe Time
-  , possibleName : Maybe String}
+spent : Activity -> Float
+spent a = List.filterMap duration a.spent |>  List.sum
 
 type alias Model =
-  { weeks : List Week
-  , ui : Interface
+  { activities: List Activity
+  , live : Maybe Time
+  , possibleName : String
   }
 
-init = ({weeks = [], ui = {live=Nothing, possibleName=Nothing} }, Cmd.none)
+init = (
+         { activities= []
+         , live=Nothing
+         , possibleName=""
+         }
+       , Cmd.none
+       )
