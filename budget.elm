@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Model exposing (init, Model)
+import Model exposing (init, Model, Activity)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -13,35 +13,37 @@ main = program
       }
 
 type Msg
-    = CategoryTyping String
-    | NewCategory
-    | NewTimer
+    = ActivityTyping String
+    | NewActivity
+    | FetchTimer
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
     case msg of
-        NewCategory ->
-          model ! []
-
-        CategoryTyping str ->
+        NewActivity ->
+          let name = model.possibleName
+          in {model | activities = (Activity 0 [] name):: model.activities
+                    , possibleName = ""
+             } ! []
+        ActivityTyping str ->
           {model | possibleName = str} ! []
 
-        NewTimer ->
+        FetchTimer->
           model ! []
 
 
 view model =
     div []
-        [ topBar
+        [ topBar model.possibleName
         , liveBar model.live
 --        , budgetBar model.weeks
         ]
 
-topBar =
+topBar possibleName =
     div [ id "topBar" ]
-        [ button [ onClick NewTimer ] [ text "Add Timer" ]
-        , input [ onInput CategoryTyping] []
-        , button [ onClick NewCategory ] [ text "Add Category" ]
+        [ button [ onClick FetchTimer] [ text "Add Timer" ]
+        , input [ value possibleName, onInput ActivityTyping] []
+        , button [ onClick NewActivity ] [ text "Add Activity" ]
         ]
 
 liveBar timer =
