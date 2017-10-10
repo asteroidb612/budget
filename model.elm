@@ -1,8 +1,8 @@
 module Model exposing (..)
 
 import Maybe exposing (Maybe(..))
-import Time exposing (Time)
-import Dict 
+import Time exposing (..)
+import Dict
 
 type alias Model =
   { activities: Dict.Dict String Activity
@@ -16,6 +16,11 @@ type alias Activity =
   }
 
 type Entry = NoTimer | Open Time | Closed Time Time
+duration : Entry -> Maybe Time
+duration ent = case ent of
+  NoTimer -> Nothing
+  Open _ -> Nothing
+  Closed start stop -> stop - start |> inMinutes |> Just
 
 init = (
          { activities= Dict.empty

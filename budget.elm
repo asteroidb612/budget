@@ -7,6 +7,7 @@ import Html.Events exposing (..)
 import Task exposing (perform)
 import Time exposing (..)
 import Dict
+import Tuple
 
 main = program
       { init = init
@@ -53,14 +54,12 @@ ufunc current x = case x of
 
 view model =
     div [ id "topBar" ]
-    [ input [ value model.possibleName, onInput ActivityTyping] []
-    , button [ onClick NewActivity ] [ text "Add Activity" ]
-    , div []
+    [ div []
       [ div [] <| case model.live of
         NoTimer ->
           [ button [onClick CycleEventTimer ] [text "Start New Timer"]]
         Open time ->
-          [ button [onClick CycleEventTimer ] [text "Stop Timer"] 
+          [ button [onClick CycleEventTimer ] [text "Stop Timer"]
           , text (toString time)]
         Closed start stop ->
           [(stop - start)
@@ -72,4 +71,17 @@ view model =
               |> List.map (\x -> button [onClick <| GotEventTimer x 0] [text x]))
           ]
       ]
+    , div [id "list"] (Dict.toList model.activities |> List.map activityRow )
+    , input [ value model.possibleName, onInput ActivityTyping] []
+    , button [ onClick NewActivity ] [ text "Add Activity" ]
     ]
+activityRow x =
+  let
+    activityLabel = Tuple.first x
+    activity = Tuple.second x
+  in
+    div []
+      [ text activityLabel
+      , input [activity.budgeted |> toString |> value] []
+      , text (toString (List.sum(List.filterMap duration activity.spent)))
+      ]
