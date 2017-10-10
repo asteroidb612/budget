@@ -52,21 +52,24 @@ ufunc current x = case x of
   Just y -> Just <| Activity y.budgeted (current::y.spent)
 
 view model =
-    div [ id "topBar" ] <| [
-     case model.live of
-      NoTimer -> button [onClick CycleEventTimer ] [text "Start New Timer"]
-      Open _ -> button [onClick CycleEventTimer ][text "Stop Timer"]
-      Closed _ _ -> div []
-        (Dict.keys model.activities
-          |> List.map (\x -> button [onClick <| GotEventTimer x 0] [text x]))
-    , input [ value model.possibleName, onInput ActivityTyping] []
+    div [ id "topBar" ]
+    [ input [ value model.possibleName, onInput ActivityTyping] []
     , button [ onClick NewActivity ] [ text "Add Activity" ]
-    , div [] <| case model.live of
-        Closed start stop -> [(stop - start)
-                              |> inMinutes
-                              |> toString
-                              |> \x -> x ++ " minutes"
-                              |> text]
-        Open time -> [text (toString time)]
-        NoTimer -> []
+    , div []
+      [ div [] <| case model.live of
+        NoTimer ->
+          [ button [onClick CycleEventTimer ] [text "Start New Timer"]]
+        Open time ->
+          [ button [onClick CycleEventTimer ] [text "Stop Timer"] 
+          , text (toString time)]
+        Closed start stop ->
+          [(stop - start)
+            |> inMinutes
+            |> toString
+            |> \x -> x ++ " minutes"
+            |> text
+          , span [] <| (Dict.keys model.activities
+              |> List.map (\x -> button [onClick <| GotEventTimer x 0] [text x]))
+          ]
+      ]
     ]
