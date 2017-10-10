@@ -1,11 +1,11 @@
-module Model exposing (init, Model, Activity)
+module Model exposing (..)
 
 import Maybe exposing (Maybe(..))
 import Time exposing (Time)
 
 type alias Model =
   { activities: List Activity
-  , live : Maybe Time
+  , live : Entry
   , possibleName : String
   }
 
@@ -19,18 +19,19 @@ spent : Activity -> Float
 spent a = List.filterMap duration a.spent |>  List.sum
 
 
-type Entry = Open Time | Closed Time Time
+type Entry = NoTimer | Open Time | Closed Time Time
 
 duration : Entry -> Maybe Time
 duration e =
   case e of
     Closed start stop ->  stop - start |> Just
     Open _ -> Nothing
+    NoTimer -> Nothing
 
 
 init = (
          { activities= []
-         , live=Nothing
+         , live=NoTimer
          , possibleName=""
          }
        , Cmd.none
