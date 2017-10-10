@@ -22,9 +22,12 @@ update msg model=
     case msg of
         NewActivity ->
           let name = model.possibleName
-          in {model | activities = (Activity 0 [] name):: model.activities
-                    , possibleName = ""
-             } ! []
+          in
+            if name == "" then model ! []
+            else
+              {model | activities = (Activity 0 [] name):: model.activities
+                     , possibleName = ""
+              } ! []
         ActivityTyping str ->
           {model | possibleName = str} ! []
 
