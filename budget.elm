@@ -21,6 +21,7 @@ type Msg
     | NewActivity
     | CycleEventTimer
     | GotEventTimer String Time
+    | Budget String String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
@@ -39,18 +40,27 @@ update msg model=
         CycleEventTimer ->
           model ! [Task.perform (GotEventTimer "") now]
 
-        GotEventTimer activity time ->
-          case model.live of
-            NoTimer -> {model | live = Open time} ! []
-            Open start -> {model | live = Closed start time } ![]
-            Closed _ _ -> {
-              model | activities = Dict.update activity (ufunc model.live)  model.activities
-                    , live = NoTimer
-              } ! []
-
-ufunc current x = case x of
-  Nothing -> Nothing
-  Just y -> Just <| Activity y.budgeted (current::y.spent)
+        GotEventTimer label time ->
+          let
+            updateSpent x = case x of
+              Nothing -> Nothing
+              Just y -> Just <| Activity y.budgeted (model.live::y.spent)
+          in
+            case model.live of
+              NoTimer -> {model | live = Open time} ! []
+              Open start -> {model | live = Closed start time } ![]
+              Closed _ _ -> {
+                model | activities = Dict.update label updateSpent model.activities
+                      , live = NoTimer
+                } ! []
+        Budget label unparsedAmount->
+            let
+              amount = String.toInt unparsedAmount|> Result.toMaybe |> Maybe.withDefault 0
+              updateBudget x = case x of
+                Nothing -> Nothing
+                Just y -> Just <| Activity amount y.spent
+            in
+              {model | activities = Dict.update label updateBudget model.activities} ! []
 
 view model =
     div [ id "topBar" ]
@@ -82,6 +92,8 @@ activityRow x =
   in
     div []
       [ text activityLabel
-      , input [activity.budgeted |> toString |> value] []
+      , input [ value <| toString activity.budgeted
+              , onInput <| Budget activityLabel
+              ] []
       , text (toString (List.sum(List.filterMap duration activity.spent)))
       ]
