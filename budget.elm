@@ -8,6 +8,8 @@ import Task exposing (perform)
 import Time exposing (..)
 import Dict
 import Tuple
+import Http exposing (send, get, Error(..))
+import Json.Decode exposing (dict)
 
 main = program
       { init = init
@@ -22,10 +24,29 @@ type Msg
     | CycleEventTimer
     | GotEventTimer String Time
     | Budget String String
+  --  | StoreActivities
+    | CommitActivities (Result Http.Error (Dict.Dict String Activity))
+    | FetchActivities
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
     case msg of
+        FetchActivities ->
+          let url = "https://pebble-timetracking.firebaseio.com/activities.json"
+              request = Http.get url (dict activity)
+          in
+            model ! [Http.send CommitActivities request]
+
+        CommitActivities (Ok newActivities) ->
+          {model | activities = newActivities} ! []
+
+        CommitActivities (Err e) -> case e of
+          Http.Timeout -> {model | message = "timeout"} ! []
+          Http.NetworkError -> {model | message = "network error"} ! []
+          Http.BadUrl x -> {model | message = "badurl: " ++ x }  ! []
+          Http.BadStatus x ->  {model | message = "badstatus: " ++ (toString x) } ! []
+          Http.BadPayload x y -> {model | message = "badpayload: " ++ x ++ "\n" ++ (toString y)} ! []
+
         NewActivity ->
           let name = model.possibleName
           in
@@ -84,7 +105,10 @@ view model =
     , div [id "list"] (Dict.toList model.activities |> List.map activityRow )
     , input [ value model.possibleName, onInput ActivityTyping] []
     , button [ onClick NewActivity ] [ text "Add Activity" ]
+    , button [onClick FetchActivities] [ text "Fetch Activities"]
+    , div [] [text model.message]
     ]
+
 activityRow x =
   let
     activityLabel = Tuple.first x
