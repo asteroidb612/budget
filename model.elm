@@ -27,14 +27,11 @@ duration ent = case ent of
   Open _ -> Nothing
   Closed start stop -> stop - start |> inMinutes |> Just
 
-init = (
-         { activities= Dict.empty
+init =   { activities= Dict.empty
          , live = NoTimer
          , possibleName = ""
          , message = ""
          }
-       , Cmd.none
-       )
 
 
 decodeEntry = Decode.map2 Closed (Decode.field "start" Decode.float) (Decode.field "stop" Decode.float)

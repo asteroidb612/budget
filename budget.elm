@@ -10,8 +10,12 @@ import Dict
 import Tuple
 import Http exposing (send, get, Error(..))
 
+url =  "https://pebble-timetracking.firebaseio.com/activities.json"
+request = Http.get url decodeActivities
+fetchActivities = Http.send CommitActivities request
+
 main = program
-      { init = init
+      { init = (init, fetchActivities)
       , view = view
       , update = update
       , subscriptions = (\_ -> Sub.none)
@@ -31,13 +35,11 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
     case msg of
         FetchActivities ->
-          let url = "https://pebble-timetracking.firebaseio.com/activities.json"
-              request = Http.get url decodeActivities
-          in
-            model ! [Http.send CommitActivities request]
+           model ! [fetchActivities]
 
         CommitActivities (Ok newActivities) ->
-          {model | activities = newActivities} ! []
+          {model | activities = newActivities,
+                  message = ""} ! []
 
         CommitActivities (Err e) -> case e of
           Http.Timeout -> {model | message = "timeout"} ! []
