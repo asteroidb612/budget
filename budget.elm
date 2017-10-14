@@ -9,7 +9,6 @@ import Time exposing (..)
 import Dict
 import Tuple
 import Http exposing (send, get, Error(..))
-import Json.Decode exposing (dict)
 
 main = program
       { init = init
@@ -24,7 +23,7 @@ type Msg
     | CycleEventTimer
     | GotEventTimer String Time
     | Budget String String
-  --  | StoreActivities
+    | SendActivities
     | CommitActivities (Result Http.Error (Dict.Dict String Activity))
     | FetchActivities
 
@@ -33,7 +32,7 @@ update msg model=
     case msg of
         FetchActivities ->
           let url = "https://pebble-timetracking.firebaseio.com/activities.json"
-              request = Http.get url (dict activity)
+              request = Http.get url decodeActivities
           in
             model ! [Http.send CommitActivities request]
 
@@ -46,6 +45,17 @@ update msg model=
           Http.BadUrl x -> {model | message = "badurl: " ++ x }  ! []
           Http.BadStatus x ->  {model | message = "badstatus: " ++ (toString x) } ! []
           Http.BadPayload x y -> {model | message = "badpayload: " ++ x ++ "\n" ++ (toString y)} ! []
+
+        SendActivities ->
+          let request = Http.request { method = "PUT"
+                        , headers = []
+                        , url = "https://pebble-timetracking.firebaseio.com/activities.json"
+                        , body = Http.jsonBody (encodeActivities model.activities)
+                        , expect = Http.expectJson decodeActivities
+                        , timeout = Nothing
+                        , withCredentials = False
+                        }
+          in model ! [Http.send CommitActivities request]
 
         NewActivity ->
           let name = model.possibleName
@@ -105,7 +115,10 @@ view model =
     , div [id "list"] (Dict.toList model.activities |> List.map activityRow )
     , input [ value model.possibleName, onInput ActivityTyping] []
     , button [ onClick NewActivity ] [ text "Add Activity" ]
-    , button [onClick FetchActivities] [ text "Fetch Activities"]
+    , div []
+      [ button [onClick SendActivities] [ text "Send Activities"]
+      , button [onClick FetchActivities] [ text "Fetch Activities"]
+      ]
     , div [] [text model.message]
     ]
 

@@ -3,7 +3,8 @@ module Model exposing (..)
 import Maybe exposing (Maybe(..))
 import Time exposing (..)
 import Dict
-import Json.Decode exposing (..)
+import Json.Decode as Decode
+import Json.Encode as Encode
 
 type alias Model =
   { activities: Dict.Dict String Activity
@@ -35,5 +36,24 @@ init = (
        , Cmd.none
        )
 
-entry = map2 Closed (field "start" float) (field "end" float)
-activity = map2 Activity (field "budgeted" int) (field "spent" (list entry))
+
+decodeEntry = Decode.map2 Closed (Decode.field "start" Decode.float) (Decode.field "stop" Decode.float)
+decodeActivity = Decode.map2 Activity (Decode.field "budgeted" Decode.int) (Decode.field "spent" (Decode.list decodeEntry))
+decodeActivities = Decode.dict decodeActivity
+
+encodeEntry : Entry -> Encode.Value
+encodeEntry e = case e of
+  --This is bad. I have told this to turn wrong entries into impossible entries
+  -- This indicates I may be thinking about the problem of cycling through timers wrong.
+  -- Perhaps there is a type for a finished value which we make from an unfinished value?
+  -- That unfinishedness should stay out of the logic operating on the finished
+  NoTimer -> Encode.object [("start", Encode.float 0), ("stop", Encode.float 0)]
+  Open t -> Encode.object [("start", Encode.float 0), ("stop", Encode.float t)]
+  Closed t1 t2 -> Encode.object [("start", Encode.float t1), ("stop", Encode.float t2)]
+
+encodeActivity a = Encode.object [("budgeted", Encode.int a.budgeted)
+                       , ("spent", Encode.list (List.map encodeEntry a.spent))]
+
+encodeActivities a = Dict.toList a
+                        |> List.map (\(k,v) -> (k, encodeActivity v))
+                        |> Encode.object
