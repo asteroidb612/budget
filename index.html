@@ -9095,6 +9095,13 @@ var _user$project$Model$encodeActivities = function (a) {
 			},
 			_elm_lang$core$Dict$toList(a)));
 };
+var _user$project$Model$decodeSpent = function (spent) {
+	return _elm_lang$core$Json_Decode$succeed(
+		A2(
+			_elm_lang$core$Maybe$withDefault,
+			{ctor: '[]'},
+			spent));
+};
 var _user$project$Model$duration = function (ent) {
 	var _p3 = ent;
 	switch (_p3.ctor) {
@@ -9129,9 +9136,13 @@ var _user$project$Model$decodeActivity = A3(
 	_user$project$Model$Activity,
 	A2(_elm_lang$core$Json_Decode$field, 'budgeted', _elm_lang$core$Json_Decode$int),
 	A2(
-		_elm_lang$core$Json_Decode$field,
-		'spent',
-		_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)));
+		_elm_lang$core$Json_Decode$andThen,
+		_user$project$Model$decodeSpent,
+		_elm_lang$core$Json_Decode$maybe(
+			A2(
+				_elm_lang$core$Json_Decode$field,
+				'spent',
+				_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)))));
 var _user$project$Model$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Model$decodeActivity);
 var _user$project$Model$Open = function (a) {
 	return {ctor: 'Open', _0: a};

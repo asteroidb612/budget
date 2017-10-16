@@ -1,6 +1,6 @@
 module Model exposing (..)
 
-import Maybe exposing (Maybe(..))
+import Maybe exposing (Maybe(..), withDefault)
 import Time exposing (..)
 import Dict
 import Json.Decode as Decode
@@ -35,7 +35,10 @@ init =   { activities= Dict.empty
 
 
 decodeEntry = Decode.map2 Closed (Decode.field "start" Decode.float) (Decode.field "stop" Decode.float)
-decodeActivity = Decode.map2 Activity (Decode.field "budgeted" Decode.int) (Decode.field "spent" (Decode.list decodeEntry))
+decodeActivity = Decode.map2 Activity (Decode.field "budgeted" Decode.int)
+                                      (Decode.andThen decodeSpent (Decode.maybe (Decode.field "spent" (Decode.list decodeEntry))))
+decodeSpent spent = Decode.succeed <| withDefault [] spent
+
 decodeActivities = Decode.dict decodeActivity
 
 encodeEntry : Entry -> Encode.Value
@@ -49,7 +52,7 @@ encodeEntry e = case e of
   Closed t1 t2 -> Encode.object [("start", Encode.float t1), ("stop", Encode.float t2)]
 
 encodeActivity a = Encode.object [("budgeted", Encode.int a.budgeted)
-                       , ("spent", Encode.list (List.map encodeEntry a.spent))]
+                                , ("spent", Encode.list (List.map encodeEntry a.spent))]
 
 encodeActivities a = Dict.toList a
                         |> List.map (\(k,v) -> (k, encodeActivity v))
