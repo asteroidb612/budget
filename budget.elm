@@ -35,7 +35,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
     case msg of
         FetchActivities ->
-           model ! [fetchActivities]
+           {model | message = "Fetching Activities"} ! [fetchActivities]
 
         CommitActivities (Ok newActivities) ->
           {model | activities = newActivities,
@@ -57,7 +57,7 @@ update msg model=
                         , timeout = Nothing
                         , withCredentials = False
                         }
-          in model ! [Http.send CommitActivities request]
+          in {model | message="Sending Activities"} ! [Http.send CommitActivities request]
 
         NewActivity ->
           let name = model.possibleName

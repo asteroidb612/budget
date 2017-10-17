@@ -9208,7 +9208,9 @@ var _user$project$Main$update = F2(
 			case 'FetchActivities':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					model,
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'Fetching Activities'}),
 					{
 						ctor: '::',
 						_0: _user$project$Main$fetchActivities,
@@ -9294,7 +9296,9 @@ var _user$project$Main$update = F2(
 					});
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					model,
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'Sending Activities'}),
 					{
 						ctor: '::',
 						_0: A2(_elm_lang$http$Http$send, _user$project$Main$CommitActivities, request),
