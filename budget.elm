@@ -10,16 +10,18 @@ import Dict
 import Tuple
 import Http exposing (send, get, Error(..))
 
-url =  "https://pebble-timetracking.firebaseio.com/activities.json"
-request = Http.get url decodeActivities
-fetchActivities = Http.send CommitActivities request
 
 main = program
       { init = (init, fetchActivities)
       , view = view
       , update = update
-      , subscriptions = (\_ -> Sub.none)
+      , subscriptions = subscriptions
       }
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  if model.haveSyncedOnce then Time.every (10*Time.second) SendActivities
+                          else Sub.none
+
 
 type Msg
     = ActivityTyping String
@@ -27,9 +29,13 @@ type Msg
     | CycleEventTimer
     | GotEventTimer String Time
     | Budget String String
-    | SendActivities
+    | SendActivities Time.Time
     | CommitActivities (Result Http.Error (Dict.Dict String Activity))
     | FetchActivities
+
+url =  "https://pebble-timetracking.firebaseio.com/activities.json"
+request = Http.get url decodeActivities
+fetchActivities = Http.send CommitActivities request
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model=
@@ -38,8 +44,9 @@ update msg model=
            {model | message = "Fetching Activities"} ! [fetchActivities]
 
         CommitActivities (Ok newActivities) ->
-          {model | activities = newActivities,
-                  message = ""} ! []
+          {model | activities = newActivities
+                 , message = ""
+                 , haveSyncedOnce = True} ! []
 
         CommitActivities (Err e) -> case e of
           Http.Timeout -> {model | message = "timeout"} ! []
@@ -48,7 +55,7 @@ update msg model=
           Http.BadStatus x ->  {model | message = "badstatus: " ++ (toString x) } ! []
           Http.BadPayload x y -> {model | message = "badpayload: " ++ x ++ "\n" ++ (toString y)} ! []
 
-        SendActivities ->
+        SendActivities _ ->
           let request = Http.request { method = "PUT"
                         , headers = []
                         , url = "https://pebble-timetracking.firebaseio.com/activities.json"
@@ -66,9 +73,10 @@ update msg model=
             else
               {model | activities = Dict.insert name (Activity 0 []) model.activities
                      , possibleName = ""
-              } ! []
+                     } ! []
         ActivityTyping str ->
-          {model | possibleName = str} ! []
+          {model | possibleName = str
+                 , message = "Unsynced Changes"} ! []
 
         CycleEventTimer ->
           model ! [Task.perform (GotEventTimer "") now]
@@ -93,7 +101,8 @@ update msg model=
                 Nothing -> Nothing
                 Just y -> Just <| Activity amount y.spent
             in
-              {model | activities = Dict.update label updateBudget model.activities} ! []
+              {model | activities = Dict.update label updateBudget model.activities
+                     , message = "Unsynced Changes"} ! []
 
 view model =
     div [ id "topBar" ]
@@ -118,7 +127,7 @@ view model =
     , input [ value model.possibleName, onInput ActivityTyping] []
     , button [ onClick NewActivity ] [ text "Add Activity" ]
     , div []
-      [ button [onClick SendActivities] [ text "Send Activities"]
+      [ button [onClick (SendActivities 0)] [ text "Send Activities"]
       , button [onClick FetchActivities] [ text "Fetch Activities"]
       ]
     , div [] [text model.message]
