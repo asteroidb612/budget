@@ -9114,9 +9114,9 @@ var _user$project$Model$duration = function (ent) {
 				_elm_lang$core$Time$inMinutes(_p3._1 - _p3._0));
 	}
 };
-var _user$project$Model$Model = F4(
-	function (a, b, c, d) {
-		return {activities: a, live: b, possibleName: c, message: d};
+var _user$project$Model$Model = F5(
+	function (a, b, c, d, e) {
+		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e};
 	});
 var _user$project$Model$Activity = F2(
 	function (a, b) {
@@ -9148,7 +9148,7 @@ var _user$project$Model$Open = function (a) {
 	return {ctor: 'Open', _0: a};
 };
 var _user$project$Model$NoTimer = {ctor: 'NoTimer'};
-var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: ''};
+var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: '', haveSyncedOnce: false};
 var _user$project$Main$url = 'https://pebble-timetracking.firebaseio.com/activities.json';
 var _user$project$Main$request = A2(_elm_lang$http$Http$get, _user$project$Main$url, _user$project$Model$decodeActivities);
 var _user$project$Main$FetchActivities = {ctor: 'FetchActivities'};
@@ -9156,7 +9156,12 @@ var _user$project$Main$CommitActivities = function (a) {
 	return {ctor: 'CommitActivities', _0: a};
 };
 var _user$project$Main$fetchActivities = A2(_elm_lang$http$Http$send, _user$project$Main$CommitActivities, _user$project$Main$request);
-var _user$project$Main$SendActivities = {ctor: 'SendActivities'};
+var _user$project$Main$SendActivities = function (a) {
+	return {ctor: 'SendActivities', _0: a};
+};
+var _user$project$Main$subscriptions = function (model) {
+	return model.haveSyncedOnce ? A2(_elm_lang$core$Time$every, 10 * _elm_lang$core$Time$second, _user$project$Main$SendActivities) : _elm_lang$core$Platform_Sub$none;
+};
 var _user$project$Main$Budget = F2(
 	function (a, b) {
 		return {ctor: 'Budget', _0: a, _1: b};
@@ -9222,7 +9227,7 @@ var _user$project$Main$update = F2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
 						_elm_lang$core$Native_Utils.update(
 							model,
-							{activities: _p0._0._0, message: ''}),
+							{activities: _p0._0._0, message: '', haveSyncedOnce: true}),
 						{ctor: '[]'});
 				} else {
 					var _p1 = _p0._0._0;
@@ -9330,7 +9335,7 @@ var _user$project$Main$update = F2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{possibleName: _p0._0}),
+						{possibleName: _p0._0, message: 'Unsynced Changes'}),
 					{ctor: '[]'});
 			case 'CycleEventTimer':
 				return A2(
@@ -9410,7 +9415,8 @@ var _user$project$Main$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							activities: A3(_elm_lang$core$Dict$update, _p0._0, updateBudget, model.activities)
+							activities: A3(_elm_lang$core$Dict$update, _p0._0, updateBudget, model.activities),
+							message: 'Unsynced Changes'
 						}),
 					{ctor: '[]'});
 		}
@@ -9571,7 +9577,8 @@ var _user$project$Main$view = function (model) {
 										_elm_lang$html$Html$button,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$SendActivities),
+											_0: _elm_lang$html$Html_Events$onClick(
+												_user$project$Main$SendActivities(0)),
 											_1: {ctor: '[]'}
 										},
 										{
@@ -9619,9 +9626,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 		init: {ctor: '_Tuple2', _0: _user$project$Model$init, _1: _user$project$Main$fetchActivities},
 		view: _user$project$Main$view,
 		update: _user$project$Main$update,
-		subscriptions: function (_p8) {
-			return _elm_lang$core$Platform_Sub$none;
-		}
+		subscriptions: _user$project$Main$subscriptions
 	})();
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

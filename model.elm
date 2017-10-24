@@ -11,6 +11,7 @@ type alias Model =
   , live : Entry
   , possibleName : String
   , message : String
+  , haveSyncedOnce : Bool
   }
 
 type alias Activity =
@@ -31,6 +32,7 @@ init =   { activities= Dict.empty
          , live = NoTimer
          , possibleName = ""
          , message = ""
+         , haveSyncedOnce = False
          }
 
 
