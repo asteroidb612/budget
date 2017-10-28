@@ -8998,67 +8998,26 @@ var _elm_lang$http$Http$StringPart = F2(
 		return {ctor: 'StringPart', _0: a, _1: b};
 	});
 var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
-var _user$project$Model$encodeEntry = function (e) {
-	var _p0 = e;
-	switch (_p0.ctor) {
-		case 'NoTimer':
-			return _elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'start',
-						_1: _elm_lang$core$Json_Encode$float(0)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'stop',
-							_1: _elm_lang$core$Json_Encode$float(0)
-						},
-						_1: {ctor: '[]'}
-					}
-				});
-		case 'Open':
-			return _elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'start',
-						_1: _elm_lang$core$Json_Encode$float(0)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'stop',
-							_1: _elm_lang$core$Json_Encode$float(_p0._0)
-						},
-						_1: {ctor: '[]'}
-					}
-				});
-		default:
-			return _elm_lang$core$Json_Encode$object(
-				{
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'start',
-						_1: _elm_lang$core$Json_Encode$float(_p0._0)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'stop',
-							_1: _elm_lang$core$Json_Encode$float(_p0._1)
-						},
-						_1: {ctor: '[]'}
-					}
-				});
-	}
+var _user$project$Model$encodeEntry = function (_p0) {
+	var _p1 = _p0;
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'start',
+				_1: _elm_lang$core$Json_Encode$float(_p1._0)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'stop',
+					_1: _elm_lang$core$Json_Encode$float(_p1._1)
+				},
+				_1: {ctor: '[]'}
+			}
+		});
 };
 var _user$project$Model$encodeActivity = function (a) {
 	return _elm_lang$core$Json_Encode$object(
@@ -9085,12 +9044,12 @@ var _user$project$Model$encodeActivities = function (a) {
 	return _elm_lang$core$Json_Encode$object(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p1) {
-				var _p2 = _p1;
+			function (_p2) {
+				var _p3 = _p2;
 				return {
 					ctor: '_Tuple2',
-					_0: _p2._0,
-					_1: _user$project$Model$encodeActivity(_p2._1)
+					_0: _p3._0,
+					_1: _user$project$Model$encodeActivity(_p3._1)
 				};
 			},
 			_elm_lang$core$Dict$toList(a)));
@@ -9102,17 +9061,17 @@ var _user$project$Model$decodeSpent = function (spent) {
 			{ctor: '[]'},
 			spent));
 };
-var _user$project$Model$duration = function (ent) {
-	var _p3 = ent;
-	switch (_p3.ctor) {
-		case 'NoTimer':
-			return _elm_lang$core$Maybe$Nothing;
-		case 'Open':
-			return _elm_lang$core$Maybe$Nothing;
-		default:
-			return _elm_lang$core$Maybe$Just(
-				_elm_lang$core$Time$inMinutes(_p3._1 - _p3._0));
-	}
+var _user$project$Model$decodeEntry = A3(
+	_elm_lang$core$Json_Decode$map2,
+	F2(
+		function (v0, v1) {
+			return {ctor: '_Tuple2', _0: v0, _1: v1};
+		}),
+	A2(_elm_lang$core$Json_Decode$field, 'start', _elm_lang$core$Json_Decode$float),
+	A2(_elm_lang$core$Json_Decode$field, 'stop', _elm_lang$core$Json_Decode$float));
+var _user$project$Model$duration = function (_p4) {
+	var _p5 = _p4;
+	return _elm_lang$core$Time$inMinutes(_p5._1 - _p5._0);
 };
 var _user$project$Model$Model = F5(
 	function (a, b, c, d, e) {
@@ -9122,15 +9081,6 @@ var _user$project$Model$Activity = F2(
 	function (a, b) {
 		return {budgeted: a, spent: b};
 	});
-var _user$project$Model$Closed = F2(
-	function (a, b) {
-		return {ctor: 'Closed', _0: a, _1: b};
-	});
-var _user$project$Model$decodeEntry = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_user$project$Model$Closed,
-	A2(_elm_lang$core$Json_Decode$field, 'start', _elm_lang$core$Json_Decode$float),
-	A2(_elm_lang$core$Json_Decode$field, 'stop', _elm_lang$core$Json_Decode$float));
 var _user$project$Model$decodeActivity = A3(
 	_elm_lang$core$Json_Decode$map2,
 	_user$project$Model$Activity,
@@ -9144,6 +9094,10 @@ var _user$project$Model$decodeActivity = A3(
 				'spent',
 				_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)))));
 var _user$project$Model$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Model$decodeActivity);
+var _user$project$Model$Closed = F2(
+	function (a, b) {
+		return {ctor: 'Closed', _0: a, _1: b};
+	});
 var _user$project$Model$Open = function (a) {
 	return {ctor: 'Open', _0: a};
 };
@@ -9196,7 +9150,7 @@ var _user$project$Main$activityRow = function (x) {
 					_0: _elm_lang$html$Html$text(
 						_elm_lang$core$Basics$toString(
 							_elm_lang$core$List$sum(
-								A2(_elm_lang$core$List$filterMap, _user$project$Model$duration, activity.spent)))),
+								A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent)))),
 					_1: {ctor: '[]'}
 				}
 			}
@@ -9351,21 +9305,8 @@ var _user$project$Main$update = F2(
 					});
 			case 'GotEventTimer':
 				var _p5 = _p0._1;
-				var updateSpent = function (x) {
-					var _p2 = x;
-					if (_p2.ctor === 'Nothing') {
-						return _elm_lang$core$Maybe$Nothing;
-					} else {
-						var _p3 = _p2._0;
-						return _elm_lang$core$Maybe$Just(
-							A2(
-								_user$project$Model$Activity,
-								_p3.budgeted,
-								{ctor: '::', _0: model.live, _1: _p3.spent}));
-					}
-				};
-				var _p4 = model.live;
-				switch (_p4.ctor) {
+				var _p2 = model.live;
+				switch (_p2.ctor) {
 					case 'NoTimer':
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9381,10 +9322,27 @@ var _user$project$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: A2(_user$project$Model$Closed, _p4._0, _p5)
+									live: A2(_user$project$Model$Closed, _p2._0, _p5)
 								}),
 							{ctor: '[]'});
 					default:
+						var updateSpent = function (x) {
+							var _p3 = x;
+							if (_p3.ctor === 'Nothing') {
+								return _elm_lang$core$Maybe$Nothing;
+							} else {
+								var _p4 = _p3._0;
+								return _elm_lang$core$Maybe$Just(
+									A2(
+										_user$project$Model$Activity,
+										_p4.budgeted,
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: _p2._0, _1: _p2._1},
+											_1: _p4.spent
+										}));
+							}
+						};
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
 							_elm_lang$core$Native_Utils.update(
