@@ -8998,24 +8998,31 @@ var _elm_lang$http$Http$StringPart = F2(
 		return {ctor: 'StringPart', _0: a, _1: b};
 	});
 var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
-var _user$project$Model$encodeEntry = function (_p0) {
-	var _p1 = _p0;
+var _user$project$Model$encodeEntry = function (e) {
 	return _elm_lang$core$Json_Encode$object(
 		{
 			ctor: '::',
 			_0: {
 				ctor: '_Tuple2',
 				_0: 'start',
-				_1: _elm_lang$core$Json_Encode$float(_p1._0)
+				_1: _elm_lang$core$Json_Encode$float(e.start)
 			},
 			_1: {
 				ctor: '::',
 				_0: {
 					ctor: '_Tuple2',
 					_0: 'stop',
-					_1: _elm_lang$core$Json_Encode$float(_p1._1)
+					_1: _elm_lang$core$Json_Encode$float(e.stop)
 				},
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'accurate',
+						_1: _elm_lang$core$Json_Encode$bool(e.accurate)
+					},
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -9044,12 +9051,12 @@ var _user$project$Model$encodeActivities = function (a) {
 	return _elm_lang$core$Json_Encode$object(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p2) {
-				var _p3 = _p2;
+			function (_p0) {
+				var _p1 = _p0;
 				return {
 					ctor: '_Tuple2',
-					_0: _p3._0,
-					_1: _user$project$Model$encodeActivity(_p3._1)
+					_0: _p1._0,
+					_1: _user$project$Model$encodeActivity(_p1._1)
 				};
 			},
 			_elm_lang$core$Dict$toList(a)));
@@ -9061,26 +9068,35 @@ var _user$project$Model$decodeSpent = function (spent) {
 			{ctor: '[]'},
 			spent));
 };
-var _user$project$Model$decodeEntry = A3(
-	_elm_lang$core$Json_Decode$map2,
-	F2(
-		function (v0, v1) {
-			return {ctor: '_Tuple2', _0: v0, _1: v1};
-		}),
-	A2(_elm_lang$core$Json_Decode$field, 'start', _elm_lang$core$Json_Decode$float),
-	A2(_elm_lang$core$Json_Decode$field, 'stop', _elm_lang$core$Json_Decode$float));
-var _user$project$Model$duration = function (_p4) {
-	var _p5 = _p4;
-	return _elm_lang$core$Time$inMinutes(_p5._1 - _p5._0);
+var _user$project$Model$decodeAccurate = function (accurate) {
+	return _elm_lang$core$Json_Decode$succeed(
+		A2(_elm_lang$core$Maybe$withDefault, true, accurate));
 };
-var _user$project$Model$Model = F5(
-	function (a, b, c, d, e) {
-		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e};
+var _user$project$Model$duration = function (e) {
+	return _elm_lang$core$Time$inMinutes(e.stop - e.start);
+};
+var _user$project$Model$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e, accuracy: f};
 	});
 var _user$project$Model$Activity = F2(
 	function (a, b) {
 		return {budgeted: a, spent: b};
 	});
+var _user$project$Model$Entry = F3(
+	function (a, b, c) {
+		return {start: a, stop: b, accurate: c};
+	});
+var _user$project$Model$decodeEntry = A4(
+	_elm_lang$core$Json_Decode$map3,
+	_user$project$Model$Entry,
+	A2(_elm_lang$core$Json_Decode$field, 'start', _elm_lang$core$Json_Decode$float),
+	A2(_elm_lang$core$Json_Decode$field, 'stop', _elm_lang$core$Json_Decode$float),
+	A2(
+		_elm_lang$core$Json_Decode$andThen,
+		_user$project$Model$decodeAccurate,
+		_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$field, 'accurate', _elm_lang$core$Json_Decode$bool))));
 var _user$project$Model$decodeActivity = A3(
 	_elm_lang$core$Json_Decode$map2,
 	_user$project$Model$Activity,
@@ -9094,6 +9110,8 @@ var _user$project$Model$decodeActivity = A3(
 				'spent',
 				_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)))));
 var _user$project$Model$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Model$decodeActivity);
+var _user$project$Model$Inaccurate = {ctor: 'Inaccurate'};
+var _user$project$Model$Accurate = {ctor: 'Accurate'};
 var _user$project$Model$Closed = F2(
 	function (a, b) {
 		return {ctor: 'Closed', _0: a, _1: b};
@@ -9102,7 +9120,7 @@ var _user$project$Model$Open = function (a) {
 	return {ctor: 'Open', _0: a};
 };
 var _user$project$Model$NoTimer = {ctor: 'NoTimer'};
-var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: '', haveSyncedOnce: false};
+var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: '', haveSyncedOnce: false, accuracy: true};
 var _user$project$Main$onBlurWithTargetValue = function (tagger) {
 	return A2(
 		_elm_lang$html$Html_Events$on,
@@ -9110,6 +9128,7 @@ var _user$project$Main$onBlurWithTargetValue = function (tagger) {
 		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
 };
 var _user$project$Main$url = 'https://pebble-timetracking.firebaseio.com/activities.json';
+var _user$project$Main$ToggleAccuracy = {ctor: 'ToggleAccuracy'};
 var _user$project$Main$FetchActivities = {ctor: 'FetchActivities'};
 var _user$project$Main$CommitActivities = function (a) {
 	return {ctor: 'CommitActivities', _0: a};
@@ -9144,6 +9163,12 @@ var _user$project$Main$Budget = F2(
 	});
 var _user$project$Main$activityRow = function (x) {
 	var activity = _elm_lang$core$Tuple$second(x);
+	var kinda = A2(
+		_elm_lang$core$List$all,
+		function (_) {
+			return _.accurate;
+		},
+		activity.spent) ? '' : '~';
 	var activityLabel = _elm_lang$core$Tuple$first(x);
 	return A2(
 		_elm_lang$html$Html$div,
@@ -9170,9 +9195,12 @@ var _user$project$Main$activityRow = function (x) {
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(
-							_elm_lang$core$List$sum(
-								A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent)))),
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							kinda,
+							_elm_lang$core$Basics$toString(
+								_elm_lang$core$List$sum(
+									A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))))),
 					_1: {ctor: '[]'}
 				}
 			}
@@ -9186,6 +9214,13 @@ var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		switch (_p0.ctor) {
+			case 'ToggleAccuracy':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{accuracy: !model.accuracy}),
+					{ctor: '[]'});
 			case 'FetchActivities':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9354,7 +9389,7 @@ var _user$project$Main$update = F2(
 										_p4.budgeted,
 										{
 											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: _p2._0, _1: _p2._1},
+											_0: {start: _p2._0, stop: _p2._1, accurate: model.accuracy},
 											_1: _p4.spent
 										}));
 							}
@@ -9363,7 +9398,8 @@ var _user$project$Main$update = F2(
 							model,
 							{
 								activities: A3(_elm_lang$core$Dict$update, _p0._0, updateSpent, model.activities),
-								live: _user$project$Model$NoTimer
+								live: _user$project$Model$NoTimer,
+								accuracy: true
 							});
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9482,27 +9518,57 @@ var _user$project$Main$view = function (model) {
 										_1: {
 											ctor: '::',
 											_0: A2(
-												_elm_lang$html$Html$span,
+												_elm_lang$html$Html$label,
 												{ctor: '[]'},
-												A2(
-													_elm_lang$core$List$map,
-													function (x) {
-														return A2(
-															_elm_lang$html$Html$button,
-															{
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$input,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$type_('checkbox'),
+															_1: {
 																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(
-																	A2(_user$project$Main$GotEventTimer, x, 0)),
-																_1: {ctor: '[]'}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text(x),
-																_1: {ctor: '[]'}
-															});
-													},
-													_elm_lang$core$Dict$keys(model.activities))),
-											_1: {ctor: '[]'}
+																_0: _elm_lang$html$Html_Attributes$checked(model.accuracy),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$ToggleAccuracy),
+																	_1: {ctor: '[]'}
+																}
+															}
+														},
+														{ctor: '[]'}),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html$text('Accurate'),
+														_1: {ctor: '[]'}
+													}
+												}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$span,
+													{ctor: '[]'},
+													A2(
+														_elm_lang$core$List$map,
+														function (x) {
+															return A2(
+																_elm_lang$html$Html$button,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(
+																		A2(_user$project$Main$GotEventTimer, x, 0)),
+																	_1: {ctor: '[]'}
+																},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text(x),
+																	_1: {ctor: '[]'}
+																});
+														},
+														_elm_lang$core$Dict$keys(model.activities))),
+												_1: {ctor: '[]'}
+											}
 										}
 									};
 							}

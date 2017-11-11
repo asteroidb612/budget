@@ -6,25 +6,26 @@ import Dict
 import Json.Decode as Decode
 import Json.Encode as Encode
 
-
 type alias Model =
     { activities : Dict.Dict String Activity
     , live : Timer
     , possibleName : String
     , message : String
     , haveSyncedOnce : Bool
+    , accuracy : Bool
     }
 
-
+type Accuracy = Accurate | Inaccurate
 type alias Activity =
     { budgeted : Int
     , spent : List Entry
     }
 
-
 type alias Entry =
-    ( Time, Time )
-
+     { start: Time
+     , stop: Time
+     , accurate: Bool
+   }
 
 type Timer
     = NoTimer
@@ -33,9 +34,8 @@ type Timer
 
 
 duration : Entry -> Time
-duration ( start, stop ) =
-    stop - start |> inMinutes
-
+duration e =
+    e.stop - e.start |> inMinutes
 
 init =
     { activities = Dict.empty
@@ -43,12 +43,17 @@ init =
     , possibleName = ""
     , message = ""
     , haveSyncedOnce = False
+    , accuracy = True
     }
 
-
 decodeEntry =
-    Decode.map2 (,) (Decode.field "start" Decode.float) (Decode.field "stop" Decode.float)
+    Decode.map3 Entry
+      (Decode.field "start" Decode.float)
+      (Decode.field "stop" Decode.float)
+      (Decode.andThen decodeAccurate (Decode.maybe (Decode.field "accurate" Decode.bool)))
 
+decodeAccurate accurate =
+    Decode.succeed <| withDefault True accurate
 
 decodeActivity =
     Decode.map2 Activity
@@ -65,8 +70,10 @@ decodeActivities =
 
 
 encodeEntry : Entry -> Encode.Value
-encodeEntry ( start, stop ) =
-    Encode.object [ ( "start", Encode.float start ), ( "stop", Encode.float stop ) ]
+encodeEntry e =
+      Encode.object [ ( "start", Encode.float e.start )
+                    , ( "stop", Encode.float e.stop )
+                    , ( "accurate", Encode.bool e.accurate) ]
 
 
 encodeActivity a =

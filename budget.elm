@@ -38,6 +38,7 @@ type Msg
     | SendActivities Time.Time
     | CommitActivities (Result Http.Error (Dict.Dict String Activity))
     | FetchActivities
+    | ToggleAccuracy
 
 
 url =
@@ -71,6 +72,8 @@ sendActivities model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ToggleAccuracy ->
+          { model | accuracy = not model.accuracy } ! []
         FetchActivities ->
             { model | message = "Fetching Activities" } ! [ fetchActivities ]
 
@@ -143,12 +146,16 @@ update msg model =
                                     Nothing
 
                                 Just y ->
-                                    Just <| Activity y.budgeted (( start, stop ) :: y.spent)
+                                    Just <| Activity y.budgeted ({ start= start
+                                                                  , stop=stop
+                                                                  , accurate=model.accuracy
+                                                                  } :: y.spent)
 
                         new_model =
                             { model
                                 | activities = Dict.update label updateSpent model.activities
                                 , live = NoTimer
+                                , accuracy = True
                             }
                     in
                         new_model ! [ sendActivities new_model ]
@@ -196,6 +203,13 @@ view model =
                                 x
                                     ++ " minutes"
                                     |> text
+                        , label []
+                          [ input [ type_ "checkbox"
+                                  , checked model.accuracy
+                                  , onClick ToggleAccuracy
+                                  ] []
+                          , text "Accurate"
+                          ]
                         , span [] <|
                             (Dict.keys model.activities
                                 |> List.map (\x -> button [ onClick <| GotEventTimer x 0 ] [ text x ])
@@ -222,9 +236,10 @@ activityRow x =
     let
         activityLabel =
             Tuple.first x
-
         activity =
             Tuple.second x
+        kinda =
+          if List.all .accurate activity.spent then "" else "~"
     in
         div []
             [ text activityLabel
@@ -233,5 +248,5 @@ activityRow x =
                 , onBlurWithTargetValue <| Budget activityLabel
                 ]
                 []
-            , text (toString (List.sum (List.map duration activity.spent)))
+            , text <| kinda ++ (toString (List.sum (List.map duration activity.spent)))
             ]
