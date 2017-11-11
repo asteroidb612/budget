@@ -216,7 +216,7 @@ view model =
                             )
                         ]
             ]
-        , div [ id "list" ] (Dict.toList model.activities |> List.map activityRow)
+        , table [ id "list" ] (Dict.toList model.activities |> List.map activityRow)
         , input [ value model.possibleName, onInput ActivityTyping ] []
         , button [ onClick NewActivity ] [ text "Add Activity" ]
         , div []
@@ -241,12 +241,12 @@ activityRow x =
         kinda =
           if List.all .accurate activity.spent then "" else "~"
     in
-        div []
-            [ text activityLabel
-            , input
+        tr []
+            [ td [] [text activityLabel]
+            , td [] [input
                 [ value <| toString activity.budgeted
                 , onBlurWithTargetValue <| Budget activityLabel
                 ]
-                []
-            , text <| kinda ++ (toString (List.sum (List.map duration activity.spent)))
+                []]
+            , td [] [text <| kinda ++ (toString (List.sum (List.map duration activity.spent)))]
             ]

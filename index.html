@@ -9171,36 +9171,57 @@ var _user$project$Main$activityRow = function (x) {
 		activity.spent) ? '' : '~';
 	var activityLabel = _elm_lang$core$Tuple$first(x);
 	return A2(
-		_elm_lang$html$Html$div,
+		_elm_lang$html$Html$tr,
 		{ctor: '[]'},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html$text(activityLabel),
+			_0: A2(
+				_elm_lang$html$Html$td,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(activityLabel),
+					_1: {ctor: '[]'}
+				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$input,
+					_elm_lang$html$Html$td,
+					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$value(
-							_elm_lang$core$Basics$toString(activity.budgeted)),
-						_1: {
-							ctor: '::',
-							_0: _user$project$Main$onBlurWithTargetValue(
-								_user$project$Main$Budget(activityLabel)),
-							_1: {ctor: '[]'}
-						}
-					},
-					{ctor: '[]'}),
+						_0: A2(
+							_elm_lang$html$Html$input,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$value(
+									_elm_lang$core$Basics$toString(activity.budgeted)),
+								_1: {
+									ctor: '::',
+									_0: _user$project$Main$onBlurWithTargetValue(
+										_user$project$Main$Budget(activityLabel)),
+									_1: {ctor: '[]'}
+								}
+							},
+							{ctor: '[]'}),
+						_1: {ctor: '[]'}
+					}),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html$text(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							kinda,
-							_elm_lang$core$Basics$toString(
-								_elm_lang$core$List$sum(
-									A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))))),
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									kinda,
+									_elm_lang$core$Basics$toString(
+										_elm_lang$core$List$sum(
+											A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))))),
+							_1: {ctor: '[]'}
+						}),
 					_1: {ctor: '[]'}
 				}
 			}
@@ -9578,7 +9599,7 @@ var _user$project$Main$view = function (model) {
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$html$Html$div,
+					_elm_lang$html$Html$table,
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$id('list'),
