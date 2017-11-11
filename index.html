@@ -9075,6 +9075,17 @@ var _user$project$Model$decodeAccurate = function (accurate) {
 var _user$project$Model$duration = function (e) {
 	return _elm_lang$core$Time$inMinutes(e.stop - e.start);
 };
+var _user$project$Model$urgency = function (activity) {
+	return _elm_lang$core$Basics$abs(
+		A2(
+			F2(
+				function (x, y) {
+					return x - y;
+				}),
+			_elm_lang$core$Basics$toFloat(activity.budgeted),
+			_elm_lang$core$List$sum(
+				A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))));
+};
 var _user$project$Model$Model = F6(
 	function (a, b, c, d, e, f) {
 		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e, accuracy: f};
@@ -9110,8 +9121,6 @@ var _user$project$Model$decodeActivity = A3(
 				'spent',
 				_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)))));
 var _user$project$Model$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Model$decodeActivity);
-var _user$project$Model$Inaccurate = {ctor: 'Inaccurate'};
-var _user$project$Model$Accurate = {ctor: 'Accurate'};
 var _user$project$Model$Closed = F2(
 	function (a, b) {
 		return {ctor: 'Closed', _0: a, _1: b};
@@ -9605,10 +9614,17 @@ var _user$project$Main$view = function (model) {
 						_0: _elm_lang$html$Html_Attributes$id('list'),
 						_1: {ctor: '[]'}
 					},
-					A2(
-						_elm_lang$core$List$map,
-						_user$project$Main$activityRow,
-						_elm_lang$core$Dict$toList(model.activities))),
+					_elm_lang$core$List$reverse(
+						A2(
+							_elm_lang$core$List$map,
+							_user$project$Main$activityRow,
+							A2(
+								_elm_lang$core$List$sortBy,
+								function (activityPair) {
+									return _user$project$Model$urgency(
+										_elm_lang$core$Tuple$second(activityPair));
+								},
+								_elm_lang$core$Dict$toList(model.activities))))),
 				_1: {
 					ctor: '::',
 					_0: A2(

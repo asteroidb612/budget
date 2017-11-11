@@ -216,7 +216,10 @@ view model =
                             )
                         ]
             ]
-        , table [ id "list" ] (Dict.toList model.activities |> List.map activityRow)
+        , table [ id "list" ] (Dict.toList model.activities
+            |>  List.sortBy (\activityPair->  Model.urgency (Tuple.second activityPair))
+            |> List.map activityRow
+            |> List.reverse)
         , input [ value model.possibleName, onInput ActivityTyping ] []
         , button [ onClick NewActivity ] [ text "Add Activity" ]
         , div []

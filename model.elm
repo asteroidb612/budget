@@ -15,11 +15,16 @@ type alias Model =
     , accuracy : Bool
     }
 
-type Accuracy = Accurate | Inaccurate
 type alias Activity =
     { budgeted : Int
     , spent : List Entry
     }
+
+urgency : Activity -> Float
+urgency activity = List.map duration activity.spent
+  |> List.sum
+  |> (-) (toFloat activity.budgeted)
+  |> abs
 
 type alias Entry =
      { start: Time
