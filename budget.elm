@@ -29,6 +29,11 @@ subscriptions model =
         Sub.none
 
 
+type ServerReaction
+    = Save
+    | NewLeaf
+
+
 type Msg
     = ActivityTyping String
     | NewActivity
@@ -36,56 +41,91 @@ type Msg
     | GotEventTimer String Time
     | Budget String String
     | SendActivities Time.Time
-    | CommitActivities (Result Http.Error (Dict.Dict String Activity))
+    | CommitActivities ServerReaction (Result Http.Error (Dict.Dict String Activity))
     | FetchActivities
     | ToggleAccuracy
+    | TurnNewLeaf
+    | SendNewLeaf Time.Time
 
 
-url =
-    "https://pebble-timetracking.firebaseio.com/activities.json"
+urlBase =
+    "https://pebble-timetracking.firebaseio.com/"
+
+
+putRequest model destination =
+    Http.request
+        { method = "PUT"
+        , headers = []
+        , url = urlBase ++ destination ++ ".json"
+        , body = Http.jsonBody (encodeActivities model.activities)
+        , expect = Http.expectJson decodeActivities
+        , timeout = Nothing
+        , withCredentials = False
+        }
+
+
+sendActivities model =
+    Http.send (CommitActivities Save) (putRequest model "activities")
 
 
 fetchActivities =
     let
         request =
-            Http.get url decodeActivities
+            Http.get (urlBase ++ "activities.json") decodeActivities
     in
-        Http.send CommitActivities request
-
-
-sendActivities model =
-    let
-        request =
-            Http.request
-                { method = "PUT"
-                , headers = []
-                , url = "https://pebble-timetracking.firebaseio.com/activities.json"
-                , body = Http.jsonBody (encodeActivities model.activities)
-                , expect = Http.expectJson decodeActivities
-                , timeout = Nothing
-                , withCredentials = False
-                }
-    in
-        Http.send CommitActivities request
+        Http.send (CommitActivities Save) request
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        TurnNewLeaf ->
+            { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
+
+        SendNewLeaf time ->
+            let
+                name =
+                    "new-leaf-" ++ (toString time)
+
+                sendNewLeaf =
+                    Http.send (CommitActivities NewLeaf) <| putRequest model name
+            in
+                { model | message = "Sending New Leaf" } ! [ sendNewLeaf ]
+
         ToggleAccuracy ->
-          { model | accuracy = not model.accuracy } ! []
+            { model | accuracy = not model.accuracy } ! []
+
         FetchActivities ->
             { model | message = "Fetching Activities" } ! [ fetchActivities ]
 
-        CommitActivities (Ok newActivities) ->
-            { model
-                | activities = newActivities
-                , message = ""
-                , haveSyncedOnce = True
-            }
-                ! []
+        CommitActivities behavior (Ok newActivities) ->
+            case behavior of
+                NewLeaf ->
+                    let
+                        clearout name activity =
+                            { activity
+                                | budgeted = 0
+                                , spent = []
+                            }
 
-        CommitActivities (Err e) ->
+                        resetActivities =
+                            Dict.map clearout newActivities
+                    in
+                        { model
+                            | message = ""
+                            , activities = resetActivities
+                        }
+                            ! []
+
+                Save ->
+                    { model
+                        | activities = newActivities
+                        , message = ""
+                        , haveSyncedOnce = True
+                    }
+                        ! []
+
+        CommitActivities _ (Err e) ->
             case e of
                 Http.Timeout ->
                     { model | message = "timeout" } ! []
@@ -146,10 +186,14 @@ update msg model =
                                     Nothing
 
                                 Just y ->
-                                    Just <| Activity y.budgeted ({ start= start
-                                                                  , stop=stop
-                                                                  , accurate=model.accuracy
-                                                                  } :: y.spent)
+                                    Just <|
+                                        Activity y.budgeted
+                                            ({ start = start
+                                             , stop = stop
+                                             , accurate = model.accuracy
+                                             }
+                                                :: y.spent
+                                            )
 
                         new_model =
                             { model
@@ -204,27 +248,32 @@ view model =
                                     ++ " minutes"
                                     |> text
                         , label []
-                          [ input [ type_ "checkbox"
-                                  , checked model.accuracy
-                                  , onClick ToggleAccuracy
-                                  ] []
-                          , text "Accurate"
-                          ]
+                            [ input
+                                [ type_ "checkbox"
+                                , checked model.accuracy
+                                , onClick ToggleAccuracy
+                                ]
+                                []
+                            , text "Accurate"
+                            ]
                         , span [] <|
                             (Dict.keys model.activities
                                 |> List.map (\x -> button [ onClick <| GotEventTimer x 0 ] [ text x ])
                             )
                         ]
             ]
-        , table [ id "list" ] (Dict.toList model.activities
-            |>  List.sortBy (\activityPair->  Model.urgency (Tuple.second activityPair))
-            |> List.map activityRow
-            |> List.reverse)
+        , table [ id "list" ]
+            (Dict.toList model.activities
+                |> List.sortBy (\activityPair -> Model.urgency (Tuple.second activityPair))
+                |> List.map activityRow
+                |> List.reverse
+            )
         , input [ value model.possibleName, onInput ActivityTyping ] []
         , button [ onClick NewActivity ] [ text "Add Activity" ]
         , div []
             [ button [ onClick (SendActivities 0) ] [ text "Send Activities" ]
             , button [ onClick FetchActivities ] [ text "Fetch Activities" ]
+            , button [ onClick TurnNewLeaf ] [ text "Turn New Leaf" ]
             ]
         , div [] [ text model.message ]
         ]
@@ -239,17 +288,24 @@ activityRow x =
     let
         activityLabel =
             Tuple.first x
+
         activity =
             Tuple.second x
+
         kinda =
-          if List.all .accurate activity.spent then "" else "~"
+            if List.all .accurate activity.spent then
+                ""
+            else
+                "~"
     in
         tr []
-            [ td [] [text activityLabel]
-            , td [] [input
-                [ value <| toString activity.budgeted
-                , onBlurWithTargetValue <| Budget activityLabel
+            [ td [] [ text activityLabel ]
+            , td []
+                [ input
+                    [ value <| toString activity.budgeted
+                    , onBlurWithTargetValue <| Budget activityLabel
+                    ]
+                    []
                 ]
-                []]
-            , td [] [text <| kinda ++ (toString (List.sum (List.map duration activity.spent)))]
+            , td [] [ text <| kinda ++ (toString (List.sum (List.map duration activity.spent))) ]
             ]

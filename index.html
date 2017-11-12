@@ -9136,30 +9136,52 @@ var _user$project$Main$onBlurWithTargetValue = function (tagger) {
 		'blur',
 		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
 };
-var _user$project$Main$url = 'https://pebble-timetracking.firebaseio.com/activities.json';
+var _user$project$Main$urlBase = 'https://pebble-timetracking.firebaseio.com/';
+var _user$project$Main$putRequest = F2(
+	function (model, destination) {
+		return _elm_lang$http$Http$request(
+			{
+				method: 'PUT',
+				headers: {ctor: '[]'},
+				url: A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Main$urlBase,
+					A2(_elm_lang$core$Basics_ops['++'], destination, '.json')),
+				body: _elm_lang$http$Http$jsonBody(
+					_user$project$Model$encodeActivities(model.activities)),
+				expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeActivities),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
+var _user$project$Main$NewLeaf = {ctor: 'NewLeaf'};
+var _user$project$Main$Save = {ctor: 'Save'};
+var _user$project$Main$SendNewLeaf = function (a) {
+	return {ctor: 'SendNewLeaf', _0: a};
+};
+var _user$project$Main$TurnNewLeaf = {ctor: 'TurnNewLeaf'};
 var _user$project$Main$ToggleAccuracy = {ctor: 'ToggleAccuracy'};
 var _user$project$Main$FetchActivities = {ctor: 'FetchActivities'};
-var _user$project$Main$CommitActivities = function (a) {
-	return {ctor: 'CommitActivities', _0: a};
+var _user$project$Main$CommitActivities = F2(
+	function (a, b) {
+		return {ctor: 'CommitActivities', _0: a, _1: b};
+	});
+var _user$project$Main$sendActivities = function (model) {
+	return A2(
+		_elm_lang$http$Http$send,
+		_user$project$Main$CommitActivities(_user$project$Main$Save),
+		A2(_user$project$Main$putRequest, model, 'activities'));
 };
 var _user$project$Main$fetchActivities = function () {
-	var request = A2(_elm_lang$http$Http$get, _user$project$Main$url, _user$project$Model$decodeActivities);
-	return A2(_elm_lang$http$Http$send, _user$project$Main$CommitActivities, request);
+	var request = A2(
+		_elm_lang$http$Http$get,
+		A2(_elm_lang$core$Basics_ops['++'], _user$project$Main$urlBase, 'activities.json'),
+		_user$project$Model$decodeActivities);
+	return A2(
+		_elm_lang$http$Http$send,
+		_user$project$Main$CommitActivities(_user$project$Main$Save),
+		request);
 }();
-var _user$project$Main$sendActivities = function (model) {
-	var request = _elm_lang$http$Http$request(
-		{
-			method: 'PUT',
-			headers: {ctor: '[]'},
-			url: 'https://pebble-timetracking.firebaseio.com/activities.json',
-			body: _elm_lang$http$Http$jsonBody(
-				_user$project$Model$encodeActivities(model.activities)),
-			expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeActivities),
-			timeout: _elm_lang$core$Maybe$Nothing,
-			withCredentials: false
-		});
-	return A2(_elm_lang$http$Http$send, _user$project$Main$CommitActivities, request);
-};
 var _user$project$Main$SendActivities = function (a) {
 	return {ctor: 'SendActivities', _0: a};
 };
@@ -9244,6 +9266,36 @@ var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		switch (_p0.ctor) {
+			case 'TurnNewLeaf':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'Turning New Leaf'}),
+					{
+						ctor: '::',
+						_0: A2(_elm_lang$core$Task$perform, _user$project$Main$SendNewLeaf, _elm_lang$core$Time$now),
+						_1: {ctor: '[]'}
+					});
+			case 'SendNewLeaf':
+				var name = A2(
+					_elm_lang$core$Basics_ops['++'],
+					'new-leaf-',
+					_elm_lang$core$Basics$toString(_p0._0));
+				var sendNewLeaf = A2(
+					_elm_lang$http$Http$send,
+					_user$project$Main$CommitActivities(_user$project$Main$NewLeaf),
+					A2(_user$project$Main$putRequest, model, name));
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'Sending New Leaf'}),
+					{
+						ctor: '::',
+						_0: sendNewLeaf,
+						_1: {ctor: '[]'}
+					});
 			case 'ToggleAccuracy':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9263,16 +9315,37 @@ var _user$project$Main$update = F2(
 						_1: {ctor: '[]'}
 					});
 			case 'CommitActivities':
-				if (_p0._0.ctor === 'Ok') {
-					return A2(
-						_elm_lang$core$Platform_Cmd_ops['!'],
-						_elm_lang$core$Native_Utils.update(
-							model,
-							{activities: _p0._0._0, message: '', haveSyncedOnce: true}),
-						{ctor: '[]'});
+				if (_p0._1.ctor === 'Ok') {
+					var _p2 = _p0._1._0;
+					var _p1 = _p0._0;
+					if (_p1.ctor === 'NewLeaf') {
+						var clearout = F2(
+							function (name, activity) {
+								return _elm_lang$core$Native_Utils.update(
+									activity,
+									{
+										budgeted: 0,
+										spent: {ctor: '[]'}
+									});
+							});
+						var resetActivities = A2(_elm_lang$core$Dict$map, clearout, _p2);
+						return A2(
+							_elm_lang$core$Platform_Cmd_ops['!'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{message: '', activities: resetActivities}),
+							{ctor: '[]'});
+					} else {
+						return A2(
+							_elm_lang$core$Platform_Cmd_ops['!'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{activities: _p2, message: '', haveSyncedOnce: true}),
+							{ctor: '[]'});
+					}
 				} else {
-					var _p1 = _p0._0._0;
-					switch (_p1.ctor) {
+					var _p3 = _p0._1._0;
+					switch (_p3.ctor) {
 						case 'Timeout':
 							return A2(
 								_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9293,7 +9366,7 @@ var _user$project$Main$update = F2(
 								_elm_lang$core$Native_Utils.update(
 									model,
 									{
-										message: A2(_elm_lang$core$Basics_ops['++'], 'badurl:\n', _p1._0)
+										message: A2(_elm_lang$core$Basics_ops['++'], 'badurl:\n', _p3._0)
 									}),
 								{ctor: '[]'});
 						case 'BadStatus':
@@ -9305,7 +9378,7 @@ var _user$project$Main$update = F2(
 										message: A2(
 											_elm_lang$core$Basics_ops['++'],
 											'badstatus:\n',
-											_elm_lang$core$Basics$toString(_p1._0))
+											_elm_lang$core$Basics$toString(_p3._0))
 									}),
 								{ctor: '[]'});
 						default:
@@ -9319,11 +9392,11 @@ var _user$project$Main$update = F2(
 											'badpayload:\n',
 											A2(
 												_elm_lang$core$Basics_ops['++'],
-												_p1._0,
+												_p3._0,
 												A2(
 													_elm_lang$core$Basics_ops['++'],
 													'\n',
-													_elm_lang$core$Basics$toString(_p1._1))))
+													_elm_lang$core$Basics$toString(_p3._1))))
 									}),
 								{ctor: '[]'});
 					}
@@ -9385,16 +9458,16 @@ var _user$project$Main$update = F2(
 						_1: {ctor: '[]'}
 					});
 			case 'GotEventTimer':
-				var _p5 = _p0._1;
-				var _p2 = model.live;
-				switch (_p2.ctor) {
+				var _p7 = _p0._1;
+				var _p4 = model.live;
+				switch (_p4.ctor) {
 					case 'NoTimer':
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: _user$project$Model$Open(_p5)
+									live: _user$project$Model$Open(_p7)
 								}),
 							{ctor: '[]'});
 					case 'Open':
@@ -9403,24 +9476,24 @@ var _user$project$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: A2(_user$project$Model$Closed, _p2._0, _p5)
+									live: A2(_user$project$Model$Closed, _p4._0, _p7)
 								}),
 							{ctor: '[]'});
 					default:
 						var updateSpent = function (x) {
-							var _p3 = x;
-							if (_p3.ctor === 'Nothing') {
+							var _p5 = x;
+							if (_p5.ctor === 'Nothing') {
 								return _elm_lang$core$Maybe$Nothing;
 							} else {
-								var _p4 = _p3._0;
+								var _p6 = _p5._0;
 								return _elm_lang$core$Maybe$Just(
 									A2(
 										_user$project$Model$Activity,
-										_p4.budgeted,
+										_p6.budgeted,
 										{
 											ctor: '::',
-											_0: {start: _p2._0, stop: _p2._1, accurate: model.accuracy},
-											_1: _p4.spent
+											_0: {start: _p4._0, stop: _p4._1, accurate: model.accuracy},
+											_1: _p6.spent
 										}));
 							}
 						};
@@ -9447,12 +9520,12 @@ var _user$project$Main$update = F2(
 					_elm_lang$core$Result$toMaybe(
 						_elm_lang$core$String$toInt(_p0._1)));
 				var updateBudget = function (x) {
-					var _p6 = x;
-					if (_p6.ctor === 'Nothing') {
+					var _p8 = x;
+					if (_p8.ctor === 'Nothing') {
 						return _elm_lang$core$Maybe$Nothing;
 					} else {
 						return _elm_lang$core$Maybe$Just(
-							A2(_user$project$Model$Activity, amount, _p6._0.spent));
+							A2(_user$project$Model$Activity, amount, _p8._0.spent));
 					}
 				};
 				var new_model = _elm_lang$core$Native_Utils.update(
@@ -9495,8 +9568,8 @@ var _user$project$Main$view = function (model) {
 						_elm_lang$html$Html$div,
 						{ctor: '[]'},
 						function () {
-							var _p7 = model.live;
-							switch (_p7.ctor) {
+							var _p9 = model.live;
+							switch (_p9.ctor) {
 								case 'NoTimer':
 									return {
 										ctor: '::',
@@ -9532,7 +9605,7 @@ var _user$project$Main$view = function (model) {
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												_elm_lang$core$Basics$toString(_p7._0)),
+												_elm_lang$core$Basics$toString(_p9._0)),
 											_1: {ctor: '[]'}
 										}
 									};
@@ -9544,7 +9617,7 @@ var _user$project$Main$view = function (model) {
 												A2(_elm_lang$core$Basics_ops['++'], x, ' minutes'));
 										}(
 											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Time$inMinutes(_p7._1 - _p7._0))),
+												_elm_lang$core$Time$inMinutes(_p9._1 - _p9._0))),
 										_1: {
 											ctor: '::',
 											_0: A2(
@@ -9687,7 +9760,22 @@ var _user$project$Main$view = function (model) {
 												_0: _elm_lang$html$Html$text('Fetch Activities'),
 												_1: {ctor: '[]'}
 											}),
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$button,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$TurnNewLeaf),
+													_1: {ctor: '[]'}
+												},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('Turn New Leaf'),
+													_1: {ctor: '[]'}
+												}),
+											_1: {ctor: '[]'}
+										}
 									}
 								}),
 							_1: {
