@@ -46,6 +46,7 @@ type Msg
     | ToggleAccuracy
     | TurnNewLeaf
     | SendNewLeaf Time.Time
+    | Discard
 
 
 urlBase =
@@ -79,6 +80,13 @@ fetchActivities =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Discard ->
+            { model
+                | live = NoTimer
+                , message = "Timer Deleted"
+            }
+                ! []
+
         TurnNewLeaf ->
             { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
 
@@ -256,10 +264,13 @@ view model =
                                 []
                             , text "Accurate"
                             ]
-                        , span [] <|
-                            (Dict.keys model.activities
-                                |> List.map (\x -> button [ onClick <| GotEventTimer x 0 ] [ text x ])
-                            )
+                        , button [ onClick Discard ] [ text "Discard" ]
+                        , Dict.keys model.activities
+                            |> List.map
+                                (\x ->
+                                    button [ onClick (GotEventTimer x 0) ] [ text x ]
+                                )
+                            |> div []
                         ]
             ]
         , table [ id "list" ]
