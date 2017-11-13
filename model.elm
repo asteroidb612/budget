@@ -88,14 +88,9 @@ decodeActivities =
     Decode.dict decodeActivity
 
 
-encodeLive : Timer -> Encode.Value
-encodeLive t =
-    case t of
-        Open start ->
-            Encode.float start
-
-        _ ->
-            Encode.null
+encodeLive : Time.Time -> Encode.Value
+encodeLive =
+    Encode.float
 
 
 encodeEntry : Entry -> Encode.Value

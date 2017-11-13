@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="UTF-8"><title>Main</title><style>html,head,body { padding:0; margin:0; }
+<html><head><meta charset="UTF-8"><title>Budget</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">
 (function() {
 'use strict';
@@ -9061,14 +9061,7 @@ var _user$project$Model$encodeActivities = function (a) {
 			},
 			_elm_lang$core$Dict$toList(a)));
 };
-var _user$project$Model$encodeLive = function (t) {
-	var _p2 = t;
-	if (_p2.ctor === 'Open') {
-		return _elm_lang$core$Json_Encode$float(_p2._0);
-	} else {
-		return _elm_lang$core$Json_Encode$null;
-	}
-};
+var _user$project$Model$encodeLive = _elm_lang$core$Json_Encode$float;
 var _user$project$Model$decodeSpent = function (spent) {
 	return _elm_lang$core$Json_Decode$succeed(
 		A2(
@@ -9139,14 +9132,14 @@ var _user$project$Model$Open = function (a) {
 };
 var _user$project$Model$NoTimer = {ctor: 'NoTimer'};
 var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: '', haveSyncedOnce: false, accuracy: true};
-var _user$project$Main$onBlurWithTargetValue = function (tagger) {
+var _user$project$Budget$onBlurWithTargetValue = function (tagger) {
 	return A2(
 		_elm_lang$html$Html_Events$on,
 		'blur',
 		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
 };
-var _user$project$Main$urlBase = 'https://pebble-timetracking.firebaseio.com/';
-var _user$project$Main$putRequest = F2(
+var _user$project$Budget$urlBase = 'https://pebble-timetracking.firebaseio.com/';
+var _user$project$Budget$putRequest = F2(
 	function (model, destination) {
 		return _elm_lang$http$Http$request(
 			{
@@ -9154,7 +9147,7 @@ var _user$project$Main$putRequest = F2(
 				headers: {ctor: '[]'},
 				url: A2(
 					_elm_lang$core$Basics_ops['++'],
-					_user$project$Main$urlBase,
+					_user$project$Budget$urlBase,
 					A2(_elm_lang$core$Basics_ops['++'], destination, '.json')),
 				body: _elm_lang$http$Http$jsonBody(
 					_user$project$Model$encodeActivities(model.activities)),
@@ -9163,50 +9156,53 @@ var _user$project$Main$putRequest = F2(
 				withCredentials: false
 			});
 	});
-var _user$project$Main$NewLeaf = {ctor: 'NewLeaf'};
-var _user$project$Main$Save = {ctor: 'Save'};
-var _user$project$Main$CommitLive = function (a) {
+var _user$project$Budget$NewLeaf = {ctor: 'NewLeaf'};
+var _user$project$Budget$Save = {ctor: 'Save'};
+var _user$project$Budget$CommitLive = function (a) {
 	return {ctor: 'CommitLive', _0: a};
 };
-var _user$project$Main$SendLive = {ctor: 'SendLive'};
-var _user$project$Main$Discard = {ctor: 'Discard'};
-var _user$project$Main$SendNewLeaf = function (a) {
+var _user$project$Budget$fetchLive = A2(
+	_elm_lang$http$Http$send,
+	_user$project$Budget$CommitLive,
+	A2(
+		_elm_lang$http$Http$get,
+		A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
+		_user$project$Model$decodeLive));
+var _user$project$Budget$Discard = {ctor: 'Discard'};
+var _user$project$Budget$SendNewLeaf = function (a) {
 	return {ctor: 'SendNewLeaf', _0: a};
 };
-var _user$project$Main$TurnNewLeaf = {ctor: 'TurnNewLeaf'};
-var _user$project$Main$ToggleAccuracy = {ctor: 'ToggleAccuracy'};
-var _user$project$Main$FetchActivities = {ctor: 'FetchActivities'};
-var _user$project$Main$CommitActivities = F2(
+var _user$project$Budget$TurnNewLeaf = {ctor: 'TurnNewLeaf'};
+var _user$project$Budget$ToggleAccuracy = {ctor: 'ToggleAccuracy'};
+var _user$project$Budget$FetchActivities = {ctor: 'FetchActivities'};
+var _user$project$Budget$CommitActivities = F2(
 	function (a, b) {
 		return {ctor: 'CommitActivities', _0: a, _1: b};
 	});
-var _user$project$Main$sendActivities = function (model) {
+var _user$project$Budget$sendActivities = function (model) {
 	return A2(
 		_elm_lang$http$Http$send,
-		_user$project$Main$CommitActivities(_user$project$Main$Save),
-		A2(_user$project$Main$putRequest, model, 'activities'));
+		_user$project$Budget$CommitActivities(_user$project$Budget$Save),
+		A2(_user$project$Budget$putRequest, model, 'activities'));
 };
-var _user$project$Main$fetchActivities = function () {
-	var request = A2(
+var _user$project$Budget$fetchActivities = A2(
+	_elm_lang$http$Http$send,
+	_user$project$Budget$CommitActivities(_user$project$Budget$Save),
+	A2(
 		_elm_lang$http$Http$get,
-		A2(_elm_lang$core$Basics_ops['++'], _user$project$Main$urlBase, 'activities.json'),
-		_user$project$Model$decodeActivities);
-	return A2(
-		_elm_lang$http$Http$send,
-		_user$project$Main$CommitActivities(_user$project$Main$Save),
-		request);
-}();
-var _user$project$Main$SendActivities = function (a) {
+		A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'activities.json'),
+		_user$project$Model$decodeActivities));
+var _user$project$Budget$SendActivities = function (a) {
 	return {ctor: 'SendActivities', _0: a};
 };
-var _user$project$Main$subscriptions = function (model) {
-	return model.haveSyncedOnce ? A2(_elm_lang$core$Time$every, 30 * _elm_lang$core$Time$second, _user$project$Main$SendActivities) : _elm_lang$core$Platform_Sub$none;
+var _user$project$Budget$subscriptions = function (model) {
+	return model.haveSyncedOnce ? A2(_elm_lang$core$Time$every, 30 * _elm_lang$core$Time$second, _user$project$Budget$SendActivities) : _elm_lang$core$Platform_Sub$none;
 };
-var _user$project$Main$Budget = F2(
+var _user$project$Budget$Budget = F2(
 	function (a, b) {
 		return {ctor: 'Budget', _0: a, _1: b};
 	});
-var _user$project$Main$activityRow = function (x) {
+var _user$project$Budget$activityRow = function (x) {
 	var activity = _elm_lang$core$Tuple$second(x);
 	var kinda = A2(
 		_elm_lang$core$List$all,
@@ -9243,8 +9239,8 @@ var _user$project$Main$activityRow = function (x) {
 									_elm_lang$core$Basics$toString(activity.budgeted)),
 								_1: {
 									ctor: '::',
-									_0: _user$project$Main$onBlurWithTargetValue(
-										_user$project$Main$Budget(activityLabel)),
+									_0: _user$project$Budget$onBlurWithTargetValue(
+										_user$project$Budget$Budget(activityLabel)),
 									_1: {ctor: '[]'}
 								}
 							},
@@ -9272,34 +9268,14 @@ var _user$project$Main$activityRow = function (x) {
 			}
 		});
 };
-var _user$project$Main$GotEventTimer = F2(
+var _user$project$Budget$GotEventTimer = F2(
 	function (a, b) {
 		return {ctor: 'GotEventTimer', _0: a, _1: b};
 	});
-var _user$project$Main$update = F2(
+var _user$project$Budget$update = F2(
 	function (msg, model) {
 		var _p0 = msg;
 		switch (_p0.ctor) {
-			case 'SendLive':
-				var request = _elm_lang$http$Http$request(
-					{
-						method: 'PUT',
-						headers: {ctor: '[]'},
-						url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Main$urlBase, 'live.json'),
-						body: _elm_lang$http$Http$jsonBody(
-							_user$project$Model$encodeLive(model.live)),
-						expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeLive),
-						timeout: _elm_lang$core$Maybe$Nothing,
-						withCredentials: false
-					});
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					model,
-					{
-						ctor: '::',
-						_0: A2(_elm_lang$http$Http$send, _user$project$Main$CommitLive, request),
-						_1: {ctor: '[]'}
-					});
 			case 'CommitLive':
 				if (_p0._0.ctor === 'Ok') {
 					var _p1 = _p0._0._0;
@@ -9314,8 +9290,7 @@ var _user$project$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: _user$project$Model$Open(_p1._0),
-									message: 'Synced New Timer'
+									live: _user$project$Model$Open(_p1._0)
 								}),
 							{ctor: '[]'});
 					}
@@ -9392,7 +9367,7 @@ var _user$project$Main$update = F2(
 						{message: 'Turning New Leaf'}),
 					{
 						ctor: '::',
-						_0: A2(_elm_lang$core$Task$perform, _user$project$Main$SendNewLeaf, _elm_lang$core$Time$now),
+						_0: A2(_elm_lang$core$Task$perform, _user$project$Budget$SendNewLeaf, _elm_lang$core$Time$now),
 						_1: {ctor: '[]'}
 					});
 			case 'SendNewLeaf':
@@ -9402,8 +9377,8 @@ var _user$project$Main$update = F2(
 					_elm_lang$core$Basics$toString(_p0._0));
 				var sendNewLeaf = A2(
 					_elm_lang$http$Http$send,
-					_user$project$Main$CommitActivities(_user$project$Main$NewLeaf),
-					A2(_user$project$Main$putRequest, model, name));
+					_user$project$Budget$CommitActivities(_user$project$Budget$NewLeaf),
+					A2(_user$project$Budget$putRequest, model, name));
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -9429,7 +9404,7 @@ var _user$project$Main$update = F2(
 						{message: 'Fetching Activities'}),
 					{
 						ctor: '::',
-						_0: _user$project$Main$fetchActivities,
+						_0: _user$project$Budget$fetchActivities,
 						_1: {ctor: '[]'}
 					});
 			case 'CommitActivities':
@@ -9527,7 +9502,7 @@ var _user$project$Main$update = F2(
 						{message: 'Sending Activities'}),
 					{
 						ctor: '::',
-						_0: _user$project$Main$sendActivities(model),
+						_0: _user$project$Budget$sendActivities(model),
 						_1: {ctor: '[]'}
 					});
 			case 'NewActivity':
@@ -9553,7 +9528,7 @@ var _user$project$Main$update = F2(
 					new_model,
 					{
 						ctor: '::',
-						_0: _user$project$Main$sendActivities(new_model),
+						_0: _user$project$Budget$sendActivities(new_model),
 						_1: {ctor: '[]'}
 					});
 			case 'ActivityTyping':
@@ -9571,7 +9546,7 @@ var _user$project$Main$update = F2(
 						ctor: '::',
 						_0: A2(
 							_elm_lang$core$Task$perform,
-							_user$project$Main$GotEventTimer(''),
+							_user$project$Budget$GotEventTimer(''),
 							_elm_lang$core$Time$now),
 						_1: {ctor: '[]'}
 					});
@@ -9580,6 +9555,17 @@ var _user$project$Main$update = F2(
 				var _p6 = model.live;
 				switch (_p6.ctor) {
 					case 'NoTimer':
+						var request = _elm_lang$http$Http$request(
+							{
+								method: 'PUT',
+								headers: {ctor: '[]'},
+								url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
+								body: _elm_lang$http$Http$jsonBody(
+									_user$project$Model$encodeLive(_p9)),
+								expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeLive),
+								timeout: _elm_lang$core$Maybe$Nothing,
+								withCredentials: false
+							});
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
 							_elm_lang$core$Native_Utils.update(
@@ -9587,7 +9573,11 @@ var _user$project$Main$update = F2(
 								{
 									live: _user$project$Model$Open(_p9)
 								}),
-							{ctor: '[]'});
+							{
+								ctor: '::',
+								_0: A2(_elm_lang$http$Http$send, _user$project$Budget$CommitLive, request),
+								_1: {ctor: '[]'}
+							});
 					case 'Open':
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9627,7 +9617,7 @@ var _user$project$Main$update = F2(
 							new_model,
 							{
 								ctor: '::',
-								_0: _user$project$Main$sendActivities(new_model),
+								_0: _user$project$Budget$sendActivities(new_model),
 								_1: {ctor: '[]'}
 							});
 				}
@@ -9657,17 +9647,17 @@ var _user$project$Main$update = F2(
 					new_model,
 					{
 						ctor: '::',
-						_0: _user$project$Main$sendActivities(new_model),
+						_0: _user$project$Budget$sendActivities(new_model),
 						_1: {ctor: '[]'}
 					});
 		}
 	});
-var _user$project$Main$CycleEventTimer = {ctor: 'CycleEventTimer'};
-var _user$project$Main$NewActivity = {ctor: 'NewActivity'};
-var _user$project$Main$ActivityTyping = function (a) {
+var _user$project$Budget$CycleEventTimer = {ctor: 'CycleEventTimer'};
+var _user$project$Budget$NewActivity = {ctor: 'NewActivity'};
+var _user$project$Budget$ActivityTyping = function (a) {
 	return {ctor: 'ActivityTyping', _0: a};
 };
-var _user$project$Main$view = function (model) {
+var _user$project$Budget$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -9695,7 +9685,7 @@ var _user$project$Main$view = function (model) {
 											_elm_lang$html$Html$button,
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$CycleEventTimer),
+												_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$CycleEventTimer),
 												_1: {ctor: '[]'}
 											},
 											{
@@ -9703,22 +9693,7 @@ var _user$project$Main$view = function (model) {
 												_0: _elm_lang$html$Html$text('Start New Timer'),
 												_1: {ctor: '[]'}
 											}),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$button,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$SendLive),
-													_1: {ctor: '[]'}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text('Fetch Timer'),
-													_1: {ctor: '[]'}
-												}),
-											_1: {ctor: '[]'}
-										}
+										_1: {ctor: '[]'}
 									};
 								case 'Open':
 									return {
@@ -9727,7 +9702,7 @@ var _user$project$Main$view = function (model) {
 											_elm_lang$html$Html$button,
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$CycleEventTimer),
+												_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$CycleEventTimer),
 												_1: {ctor: '[]'}
 											},
 											{
@@ -9745,7 +9720,7 @@ var _user$project$Main$view = function (model) {
 													_elm_lang$html$Html$button,
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Discard),
+														_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
 														_1: {ctor: '[]'}
 													},
 													{
@@ -9783,7 +9758,7 @@ var _user$project$Main$view = function (model) {
 																_0: _elm_lang$html$Html_Attributes$checked(model.accuracy),
 																_1: {
 																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$ToggleAccuracy),
+																	_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$ToggleAccuracy),
 																	_1: {ctor: '[]'}
 																}
 															}
@@ -9801,7 +9776,7 @@ var _user$project$Main$view = function (model) {
 													_elm_lang$html$Html$button,
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$Discard),
+														_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
 														_1: {ctor: '[]'}
 													},
 													{
@@ -9822,7 +9797,7 @@ var _user$project$Main$view = function (model) {
 																	{
 																		ctor: '::',
 																		_0: _elm_lang$html$Html_Events$onClick(
-																			A2(_user$project$Main$GotEventTimer, x, 0)),
+																			A2(_user$project$Budget$GotEventTimer, x, 0)),
 																		_1: {ctor: '[]'}
 																	},
 																	{
@@ -9853,7 +9828,7 @@ var _user$project$Main$view = function (model) {
 					_elm_lang$core$List$reverse(
 						A2(
 							_elm_lang$core$List$map,
-							_user$project$Main$activityRow,
+							_user$project$Budget$activityRow,
 							A2(
 								_elm_lang$core$List$sortBy,
 								function (activityPair) {
@@ -9870,7 +9845,7 @@ var _user$project$Main$view = function (model) {
 							_0: _elm_lang$html$Html_Attributes$value(model.possibleName),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onInput(_user$project$Main$ActivityTyping),
+								_0: _elm_lang$html$Html_Events$onInput(_user$project$Budget$ActivityTyping),
 								_1: {ctor: '[]'}
 							}
 						},
@@ -9881,7 +9856,7 @@ var _user$project$Main$view = function (model) {
 							_elm_lang$html$Html$button,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$NewActivity),
+								_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$NewActivity),
 								_1: {ctor: '[]'}
 							},
 							{
@@ -9901,7 +9876,7 @@ var _user$project$Main$view = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html_Events$onClick(
-												_user$project$Main$SendActivities(0)),
+												_user$project$Budget$SendActivities(0)),
 											_1: {ctor: '[]'}
 										},
 										{
@@ -9915,7 +9890,7 @@ var _user$project$Main$view = function (model) {
 											_elm_lang$html$Html$button,
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$FetchActivities),
+												_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$FetchActivities),
 												_1: {ctor: '[]'}
 											},
 											{
@@ -9929,7 +9904,7 @@ var _user$project$Main$view = function (model) {
 												_elm_lang$html$Html$button,
 												{
 													ctor: '::',
-													_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$TurnNewLeaf),
+													_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$TurnNewLeaf),
 													_1: {ctor: '[]'}
 												},
 												{
@@ -9959,17 +9934,28 @@ var _user$project$Main$view = function (model) {
 			}
 		});
 };
-var _user$project$Main$main = _elm_lang$html$Html$program(
+var _user$project$Budget$main = _elm_lang$html$Html$program(
 	{
-		init: {ctor: '_Tuple2', _0: _user$project$Model$init, _1: _user$project$Main$fetchActivities},
-		view: _user$project$Main$view,
-		update: _user$project$Main$update,
-		subscriptions: _user$project$Main$subscriptions
+		init: A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			_user$project$Model$init,
+			{
+				ctor: '::',
+				_0: _user$project$Budget$fetchActivities,
+				_1: {
+					ctor: '::',
+					_0: _user$project$Budget$fetchLive,
+					_1: {ctor: '[]'}
+				}
+			}),
+		view: _user$project$Budget$view,
+		update: _user$project$Budget$update,
+		subscriptions: _user$project$Budget$subscriptions
 	})();
 var Elm = {};
-Elm['Main'] = Elm['Main'] || {};
-if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', undefined);
+Elm['Budget'] = Elm['Budget'] || {};
+if (typeof _user$project$Budget$main !== 'undefined') {
+    _user$project$Budget$main(Elm['Budget'], 'Budget', undefined);
 }
 
 if (typeof define === "function" && define['amd'])
@@ -10001,4 +9987,4 @@ for (var publicModule in Elm)
 }
 
 }).call(this);
-</script></head><body><script type="text/javascript">Elm.Main.fullscreen()</script></body></html>
+</script></head><body><script type="text/javascript">Elm.Budget.fullscreen()</script></body></html>

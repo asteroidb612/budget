@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Budget exposing (main)
 
 import Model exposing (..)
 import Html exposing (..)
@@ -14,7 +14,7 @@ import Json.Decode
 
 main =
     program
-        { init = ( init, fetchActivities )
+        { init = init ! [ fetchActivities, fetchLive ]
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -47,7 +47,6 @@ type Msg
     | TurnNewLeaf
     | SendNewLeaf Time.Time
     | Discard
-    | SendLive
     | CommitLive (Result Http.Error (Maybe Float))
 
 
@@ -68,42 +67,30 @@ putRequest model destination =
 
 
 sendActivities model =
-    Http.send (CommitActivities Save) (putRequest model "activities")
+    Http.send (CommitActivities Save) <|
+        putRequest model "activities"
 
 
 fetchActivities =
-    let
-        request =
-            Http.get (urlBase ++ "activities.json") decodeActivities
-    in
-        Http.send (CommitActivities Save) request
+    Http.send (CommitActivities Save) <|
+        Http.get (urlBase ++ "activities.json") decodeActivities
+
+
+fetchLive =
+    Http.send (CommitLive) <|
+        Http.get (urlBase ++ "live.json") decodeLive
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SendLive ->
-            let
-                request =
-                    Http.request
-                        { method = "PUT"
-                        , headers = []
-                        , url = urlBase ++ "live.json"
-                        , body = Http.jsonBody (encodeLive model.live)
-                        , expect = Http.expectJson decodeLive
-                        , timeout = Nothing
-                        , withCredentials = False
-                        }
-            in
-                model ! [ Http.send CommitLive request ]
-
         CommitLive (Ok t) ->
             case t of
                 Nothing ->
                     model ! []
 
                 Just t ->
-                    { model | live = Open t, message = "Synced New Timer" } ! []
+                    { model | live = Open t } ! []
 
         CommitLive (Err e) ->
             case e of
@@ -223,7 +210,20 @@ update msg model =
         GotEventTimer label time ->
             case model.live of
                 NoTimer ->
-                    { model | live = Open time } ! []
+                    let
+                        request =
+                            Http.request
+                                { method = "PUT"
+                                , headers = []
+                                , url = urlBase ++ "live.json"
+                                , body = Http.jsonBody (encodeLive time)
+                                , expect = Http.expectJson decodeLive
+                                , timeout = Nothing
+                                , withCredentials = False
+                                }
+                    in
+                        { model | live = Open time }
+                            ! [ Http.send CommitLive request ]
 
                 Open start ->
                     { model | live = Closed start time } ! []
@@ -283,7 +283,6 @@ view model =
                 case model.live of
                     NoTimer ->
                         [ button [ onClick CycleEventTimer ] [ text "Start New Timer" ]
-                        , button [ onClick SendLive ] [ text "Fetch Timer" ]
                         ]
 
                     Open time ->
