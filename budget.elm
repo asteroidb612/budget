@@ -10,6 +10,7 @@ import Dict
 import Tuple
 import Http exposing (send, get, Error(..))
 import Json.Decode
+import Json.Encode
 
 
 main =
@@ -252,7 +253,19 @@ update msg model =
                                 , accuracy = True
                             }
                     in
-                        new_model ! [ sendActivities new_model ]
+                        new_model
+                            ! [ sendActivities new_model
+                              , Http.send CommitLive <|
+                                    Http.request
+                                        { method = "PUT"
+                                        , headers = []
+                                        , url = urlBase ++ "live.json"
+                                        , body = Http.jsonBody Json.Encode.null
+                                        , expect = Http.expectJson decodeLive
+                                        , timeout = Nothing
+                                        , withCredentials = False
+                                        }
+                              ]
 
         Budget label unparsedAmount ->
             let

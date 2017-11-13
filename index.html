@@ -9618,7 +9618,23 @@ var _user$project$Budget$update = F2(
 							{
 								ctor: '::',
 								_0: _user$project$Budget$sendActivities(new_model),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$http$Http$send,
+										_user$project$Budget$CommitLive,
+										_elm_lang$http$Http$request(
+											{
+												method: 'PUT',
+												headers: {ctor: '[]'},
+												url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
+												body: _elm_lang$http$Http$jsonBody(_elm_lang$core$Json_Encode$null),
+												expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeLive),
+												timeout: _elm_lang$core$Maybe$Nothing,
+												withCredentials: false
+											})),
+									_1: {ctor: '[]'}
+								}
 							});
 				}
 			default:
