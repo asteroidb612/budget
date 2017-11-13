@@ -59,6 +59,10 @@ init =
     }
 
 
+decodeLive =
+    Decode.nullable Decode.float
+
+
 decodeEntry =
     Decode.map3 Entry
         (Decode.field "start" Decode.float)
@@ -82,6 +86,16 @@ decodeSpent spent =
 
 decodeActivities =
     Decode.dict decodeActivity
+
+
+encodeLive : Timer -> Encode.Value
+encodeLive t =
+    case t of
+        Open start ->
+            Encode.float start
+
+        _ ->
+            Encode.null
 
 
 encodeEntry : Entry -> Encode.Value

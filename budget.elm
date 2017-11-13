@@ -47,6 +47,8 @@ type Msg
     | TurnNewLeaf
     | SendNewLeaf Time.Time
     | Discard
+    | SendLive
+    | CommitLive (Result Http.Error (Maybe Float))
 
 
 urlBase =
@@ -80,6 +82,46 @@ fetchActivities =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        SendLive ->
+            let
+                request =
+                    Http.request
+                        { method = "PUT"
+                        , headers = []
+                        , url = urlBase ++ "live.json"
+                        , body = Http.jsonBody (encodeLive model.live)
+                        , expect = Http.expectJson decodeLive
+                        , timeout = Nothing
+                        , withCredentials = False
+                        }
+            in
+                model ! [ Http.send CommitLive request ]
+
+        CommitLive (Ok t) ->
+            case t of
+                Nothing ->
+                    model ! []
+
+                Just t ->
+                    { model | live = Open t, message = "Synced New Timer" } ! []
+
+        CommitLive (Err e) ->
+            case e of
+                Http.Timeout ->
+                    { model | message = "timeout" } ! []
+
+                Http.NetworkError ->
+                    { model | message = "network error" } ! []
+
+                Http.BadUrl x ->
+                    { model | message = "badurl:\n" ++ x } ! []
+
+                Http.BadStatus x ->
+                    { model | message = "badstatus:\n" ++ (toString x) } ! []
+
+                Http.BadPayload x y ->
+                    { model | message = "badpayload:\n" ++ x ++ "\n" ++ (toString y) } ! []
+
         Discard ->
             { model
                 | live = NoTimer
@@ -240,11 +282,14 @@ view model =
             [ div [] <|
                 case model.live of
                     NoTimer ->
-                        [ button [ onClick CycleEventTimer ] [ text "Start New Timer" ] ]
+                        [ button [ onClick CycleEventTimer ] [ text "Start New Timer" ]
+                        , button [ onClick SendLive ] [ text "Fetch Timer" ]
+                        ]
 
                     Open time ->
                         [ button [ onClick CycleEventTimer ] [ text "Stop Timer" ]
                         , text (toString time)
+                        , button [ onClick Discard ] [ text "Discard" ]
                         ]
 
                     Closed start stop ->
