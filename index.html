@@ -8998,7 +8998,73 @@ var _elm_lang$http$Http$StringPart = F2(
 		return {ctor: 'StringPart', _0: a, _1: b};
 	});
 var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
-var _user$project$Model$encodeEntry = function (e) {
+var _user$project$Budget$onBlurWithTargetValue = function (tagger) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'blur',
+		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
+};
+var _user$project$Budget$handleError = F2(
+	function (model, e) {
+		var _p0 = e;
+		switch (_p0.ctor) {
+			case 'Timeout':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'timeout'}),
+					{ctor: '[]'});
+			case 'NetworkError':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{message: 'network error'}),
+					{ctor: '[]'});
+			case 'BadUrl':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							message: A2(_elm_lang$core$Basics_ops['++'], 'badurl:\n', _p0._0)
+						}),
+					{ctor: '[]'});
+			case 'BadStatus':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							message: A2(
+								_elm_lang$core$Basics_ops['++'],
+								'badstatus:\n',
+								_elm_lang$core$Basics$toString(_p0._0))
+						}),
+					{ctor: '[]'});
+			default:
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							message: A2(
+								_elm_lang$core$Basics_ops['++'],
+								'badpayload:\n',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									_p0._0,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'\n',
+										_elm_lang$core$Basics$toString(_p0._1))))
+						}),
+					{ctor: '[]'});
+		}
+	});
+var _user$project$Budget$urlBase = 'https://pebble-timetracking.firebaseio.com/';
+var _user$project$Budget$encodeEntry = function (e) {
 	return _elm_lang$core$Json_Encode$object(
 		{
 			ctor: '::',
@@ -9026,7 +9092,7 @@ var _user$project$Model$encodeEntry = function (e) {
 			}
 		});
 };
-var _user$project$Model$encodeActivity = function (a) {
+var _user$project$Budget$encodeActivity = function (a) {
 	return _elm_lang$core$Json_Encode$object(
 		{
 			ctor: '::',
@@ -9041,43 +9107,43 @@ var _user$project$Model$encodeActivity = function (a) {
 					ctor: '_Tuple2',
 					_0: 'spent',
 					_1: _elm_lang$core$Json_Encode$list(
-						A2(_elm_lang$core$List$map, _user$project$Model$encodeEntry, a.spent))
+						A2(_elm_lang$core$List$map, _user$project$Budget$encodeEntry, a.spent))
 				},
 				_1: {ctor: '[]'}
 			}
 		});
 };
-var _user$project$Model$encodeActivities = function (a) {
+var _user$project$Budget$encodeActivities = function (a) {
 	return _elm_lang$core$Json_Encode$object(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p0) {
-				var _p1 = _p0;
+			function (_p1) {
+				var _p2 = _p1;
 				return {
 					ctor: '_Tuple2',
-					_0: _p1._0,
-					_1: _user$project$Model$encodeActivity(_p1._1)
+					_0: _p2._0,
+					_1: _user$project$Budget$encodeActivity(_p2._1)
 				};
 			},
 			_elm_lang$core$Dict$toList(a)));
 };
-var _user$project$Model$encodeLive = _elm_lang$core$Json_Encode$float;
-var _user$project$Model$decodeSpent = function (spent) {
+var _user$project$Budget$encodeLive = _elm_lang$core$Json_Encode$float;
+var _user$project$Budget$decodeSpent = function (spent) {
 	return _elm_lang$core$Json_Decode$succeed(
 		A2(
 			_elm_lang$core$Maybe$withDefault,
 			{ctor: '[]'},
 			spent));
 };
-var _user$project$Model$decodeAccurate = function (accurate) {
+var _user$project$Budget$decodeAccurate = function (accurate) {
 	return _elm_lang$core$Json_Decode$succeed(
 		A2(_elm_lang$core$Maybe$withDefault, true, accurate));
 };
-var _user$project$Model$decodeLive = _elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$float);
-var _user$project$Model$duration = function (e) {
+var _user$project$Budget$decodeLive = _elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$float);
+var _user$project$Budget$duration = function (e) {
 	return _elm_lang$core$Time$inMinutes(e.stop - e.start);
 };
-var _user$project$Model$urgency = function (activity) {
+var _user$project$Budget$urgency = function (activity) {
 	return _elm_lang$core$Basics$abs(
 		A2(
 			F2(
@@ -9086,59 +9152,39 @@ var _user$project$Model$urgency = function (activity) {
 				}),
 			_elm_lang$core$Basics$toFloat(activity.budgeted),
 			_elm_lang$core$List$sum(
-				A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))));
+				A2(_elm_lang$core$List$map, _user$project$Budget$duration, activity.spent))));
 };
-var _user$project$Model$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e, accuracy: f};
-	});
-var _user$project$Model$Activity = F2(
-	function (a, b) {
-		return {budgeted: a, spent: b};
-	});
-var _user$project$Model$Entry = F3(
+var _user$project$Budget$Entry = F3(
 	function (a, b, c) {
 		return {start: a, stop: b, accurate: c};
 	});
-var _user$project$Model$decodeEntry = A4(
+var _user$project$Budget$decodeEntry = A4(
 	_elm_lang$core$Json_Decode$map3,
-	_user$project$Model$Entry,
+	_user$project$Budget$Entry,
 	A2(_elm_lang$core$Json_Decode$field, 'start', _elm_lang$core$Json_Decode$float),
 	A2(_elm_lang$core$Json_Decode$field, 'stop', _elm_lang$core$Json_Decode$float),
 	A2(
 		_elm_lang$core$Json_Decode$andThen,
-		_user$project$Model$decodeAccurate,
+		_user$project$Budget$decodeAccurate,
 		_elm_lang$core$Json_Decode$maybe(
 			A2(_elm_lang$core$Json_Decode$field, 'accurate', _elm_lang$core$Json_Decode$bool))));
-var _user$project$Model$decodeActivity = A3(
+var _user$project$Budget$Activity = F2(
+	function (a, b) {
+		return {budgeted: a, spent: b};
+	});
+var _user$project$Budget$decodeActivity = A3(
 	_elm_lang$core$Json_Decode$map2,
-	_user$project$Model$Activity,
+	_user$project$Budget$Activity,
 	A2(_elm_lang$core$Json_Decode$field, 'budgeted', _elm_lang$core$Json_Decode$int),
 	A2(
 		_elm_lang$core$Json_Decode$andThen,
-		_user$project$Model$decodeSpent,
+		_user$project$Budget$decodeSpent,
 		_elm_lang$core$Json_Decode$maybe(
 			A2(
 				_elm_lang$core$Json_Decode$field,
 				'spent',
-				_elm_lang$core$Json_Decode$list(_user$project$Model$decodeEntry)))));
-var _user$project$Model$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Model$decodeActivity);
-var _user$project$Model$Closed = F2(
-	function (a, b) {
-		return {ctor: 'Closed', _0: a, _1: b};
-	});
-var _user$project$Model$Open = function (a) {
-	return {ctor: 'Open', _0: a};
-};
-var _user$project$Model$NoTimer = {ctor: 'NoTimer'};
-var _user$project$Model$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Model$NoTimer, possibleName: '', message: '', haveSyncedOnce: false, accuracy: true};
-var _user$project$Budget$onBlurWithTargetValue = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'blur',
-		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
-};
-var _user$project$Budget$urlBase = 'https://pebble-timetracking.firebaseio.com/';
+				_elm_lang$core$Json_Decode$list(_user$project$Budget$decodeEntry)))));
+var _user$project$Budget$decodeActivities = _elm_lang$core$Json_Decode$dict(_user$project$Budget$decodeActivity);
 var _user$project$Budget$putRequest = F2(
 	function (model, destination) {
 		return _elm_lang$http$Http$request(
@@ -9150,12 +9196,25 @@ var _user$project$Budget$putRequest = F2(
 					_user$project$Budget$urlBase,
 					A2(_elm_lang$core$Basics_ops['++'], destination, '.json')),
 				body: _elm_lang$http$Http$jsonBody(
-					_user$project$Model$encodeActivities(model.activities)),
-				expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeActivities),
+					_user$project$Budget$encodeActivities(model.activities)),
+				expect: _elm_lang$http$Http$expectJson(_user$project$Budget$decodeActivities),
 				timeout: _elm_lang$core$Maybe$Nothing,
 				withCredentials: false
 			});
 	});
+var _user$project$Budget$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {activities: a, live: b, possibleName: c, message: d, haveSyncedOnce: e, accuracy: f};
+	});
+var _user$project$Budget$Closed = F2(
+	function (a, b) {
+		return {ctor: 'Closed', _0: a, _1: b};
+	});
+var _user$project$Budget$Open = function (a) {
+	return {ctor: 'Open', _0: a};
+};
+var _user$project$Budget$NoTimer = {ctor: 'NoTimer'};
+var _user$project$Budget$init = {activities: _elm_lang$core$Dict$empty, live: _user$project$Budget$NoTimer, possibleName: '', message: '', haveSyncedOnce: false, accuracy: true};
 var _user$project$Budget$NewLeaf = {ctor: 'NewLeaf'};
 var _user$project$Budget$Save = {ctor: 'Save'};
 var _user$project$Budget$CommitLive = function (a) {
@@ -9167,7 +9226,7 @@ var _user$project$Budget$fetchLive = A2(
 	A2(
 		_elm_lang$http$Http$get,
 		A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
-		_user$project$Model$decodeLive));
+		_user$project$Budget$decodeLive));
 var _user$project$Budget$Discard = {ctor: 'Discard'};
 var _user$project$Budget$SendNewLeaf = function (a) {
 	return {ctor: 'SendNewLeaf', _0: a};
@@ -9191,7 +9250,7 @@ var _user$project$Budget$fetchActivities = A2(
 	A2(
 		_elm_lang$http$Http$get,
 		A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'activities.json'),
-		_user$project$Model$decodeActivities));
+		_user$project$Budget$decodeActivities));
 var _user$project$Budget$SendActivities = function (a) {
 	return {ctor: 'SendActivities', _0: a};
 };
@@ -9260,7 +9319,7 @@ var _user$project$Budget$activityRow = function (x) {
 									kinda,
 									_elm_lang$core$Basics$toString(
 										_elm_lang$core$List$sum(
-											A2(_elm_lang$core$List$map, _user$project$Model$duration, activity.spent))))),
+											A2(_elm_lang$core$List$map, _user$project$Budget$duration, activity.spent))))),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
@@ -9274,12 +9333,12 @@ var _user$project$Budget$GotEventTimer = F2(
 	});
 var _user$project$Budget$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p3 = msg;
+		switch (_p3.ctor) {
 			case 'CommitLive':
-				if (_p0._0.ctor === 'Ok') {
-					var _p1 = _p0._0._0;
-					if (_p1.ctor === 'Nothing') {
+				if (_p3._0.ctor === 'Ok') {
+					var _p4 = _p3._0._0;
+					if (_p4.ctor === 'Nothing') {
 						return A2(
 							_elm_lang$core$Platform_Cmd_ops['!'],
 							model,
@@ -9290,74 +9349,51 @@ var _user$project$Budget$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: _user$project$Model$Open(_p1._0)
+									live: _user$project$Budget$Open(_p4._0)
 								}),
 							{ctor: '[]'});
 					}
 				} else {
-					var _p2 = _p0._0._0;
-					switch (_p2.ctor) {
-						case 'Timeout':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{message: 'timeout'}),
-								{ctor: '[]'});
-						case 'NetworkError':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{message: 'network error'}),
-								{ctor: '[]'});
-						case 'BadUrl':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
+					return A2(_user$project$Budget$handleError, model, _p3._0._0);
+				}
+			case 'CommitActivities':
+				if (_p3._1.ctor === 'Ok') {
+					var _p6 = _p3._1._0;
+					var _p5 = _p3._0;
+					if (_p5.ctor === 'NewLeaf') {
+						var clearout = F2(
+							function (name, activity) {
+								return _elm_lang$core$Native_Utils.update(
+									activity,
 									{
-										message: A2(_elm_lang$core$Basics_ops['++'], 'badurl:\n', _p2._0)
-									}),
-								{ctor: '[]'});
-						case 'BadStatus':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{
-										message: A2(
-											_elm_lang$core$Basics_ops['++'],
-											'badstatus:\n',
-											_elm_lang$core$Basics$toString(_p2._0))
-									}),
-								{ctor: '[]'});
-						default:
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{
-										message: A2(
-											_elm_lang$core$Basics_ops['++'],
-											'badpayload:\n',
-											A2(
-												_elm_lang$core$Basics_ops['++'],
-												_p2._0,
-												A2(
-													_elm_lang$core$Basics_ops['++'],
-													'\n',
-													_elm_lang$core$Basics$toString(_p2._1))))
-									}),
-								{ctor: '[]'});
+										budgeted: 0,
+										spent: {ctor: '[]'}
+									});
+							});
+						var resetActivities = A2(_elm_lang$core$Dict$map, clearout, _p6);
+						return A2(
+							_elm_lang$core$Platform_Cmd_ops['!'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{message: '', activities: resetActivities}),
+							{ctor: '[]'});
+					} else {
+						return A2(
+							_elm_lang$core$Platform_Cmd_ops['!'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{activities: _p6, message: '', haveSyncedOnce: true}),
+							{ctor: '[]'});
 					}
+				} else {
+					return A2(_user$project$Budget$handleError, model, _p3._1._0);
 				}
 			case 'Discard':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{live: _user$project$Model$NoTimer, message: 'Timer Deleted'}),
+						{live: _user$project$Budget$NoTimer, message: 'Timer Deleted'}),
 					{ctor: '[]'});
 			case 'TurnNewLeaf':
 				return A2(
@@ -9374,7 +9410,7 @@ var _user$project$Budget$update = F2(
 				var name = A2(
 					_elm_lang$core$Basics_ops['++'],
 					'new-leaf-',
-					_elm_lang$core$Basics$toString(_p0._0));
+					_elm_lang$core$Basics$toString(_p3._0));
 				var sendNewLeaf = A2(
 					_elm_lang$http$Http$send,
 					_user$project$Budget$CommitActivities(_user$project$Budget$NewLeaf),
@@ -9407,93 +9443,6 @@ var _user$project$Budget$update = F2(
 						_0: _user$project$Budget$fetchActivities,
 						_1: {ctor: '[]'}
 					});
-			case 'CommitActivities':
-				if (_p0._1.ctor === 'Ok') {
-					var _p4 = _p0._1._0;
-					var _p3 = _p0._0;
-					if (_p3.ctor === 'NewLeaf') {
-						var clearout = F2(
-							function (name, activity) {
-								return _elm_lang$core$Native_Utils.update(
-									activity,
-									{
-										budgeted: 0,
-										spent: {ctor: '[]'}
-									});
-							});
-						var resetActivities = A2(_elm_lang$core$Dict$map, clearout, _p4);
-						return A2(
-							_elm_lang$core$Platform_Cmd_ops['!'],
-							_elm_lang$core$Native_Utils.update(
-								model,
-								{message: '', activities: resetActivities}),
-							{ctor: '[]'});
-					} else {
-						return A2(
-							_elm_lang$core$Platform_Cmd_ops['!'],
-							_elm_lang$core$Native_Utils.update(
-								model,
-								{activities: _p4, message: '', haveSyncedOnce: true}),
-							{ctor: '[]'});
-					}
-				} else {
-					var _p5 = _p0._1._0;
-					switch (_p5.ctor) {
-						case 'Timeout':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{message: 'timeout'}),
-								{ctor: '[]'});
-						case 'NetworkError':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{message: 'network error'}),
-								{ctor: '[]'});
-						case 'BadUrl':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{
-										message: A2(_elm_lang$core$Basics_ops['++'], 'badurl:\n', _p5._0)
-									}),
-								{ctor: '[]'});
-						case 'BadStatus':
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{
-										message: A2(
-											_elm_lang$core$Basics_ops['++'],
-											'badstatus:\n',
-											_elm_lang$core$Basics$toString(_p5._0))
-									}),
-								{ctor: '[]'});
-						default:
-							return A2(
-								_elm_lang$core$Platform_Cmd_ops['!'],
-								_elm_lang$core$Native_Utils.update(
-									model,
-									{
-										message: A2(
-											_elm_lang$core$Basics_ops['++'],
-											'badpayload:\n',
-											A2(
-												_elm_lang$core$Basics_ops['++'],
-												_p5._0,
-												A2(
-													_elm_lang$core$Basics_ops['++'],
-													'\n',
-													_elm_lang$core$Basics$toString(_p5._1))))
-									}),
-								{ctor: '[]'});
-					}
-				}
 			case 'SendActivities':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9514,7 +9463,7 @@ var _user$project$Budget$update = F2(
 							_elm_lang$core$Dict$insert,
 							name,
 							A2(
-								_user$project$Model$Activity,
+								_user$project$Budget$Activity,
 								0,
 								{ctor: '[]'}),
 							model.activities),
@@ -9536,7 +9485,7 @@ var _user$project$Budget$update = F2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{possibleName: _p0._0}),
+						{possibleName: _p3._0}),
 					{ctor: '[]'});
 			case 'CycleEventTimer':
 				return A2(
@@ -9551,9 +9500,9 @@ var _user$project$Budget$update = F2(
 						_1: {ctor: '[]'}
 					});
 			case 'GotEventTimer':
-				var _p9 = _p0._1;
-				var _p6 = model.live;
-				switch (_p6.ctor) {
+				var _p10 = _p3._1;
+				var _p7 = model.live;
+				switch (_p7.ctor) {
 					case 'NoTimer':
 						var request = _elm_lang$http$Http$request(
 							{
@@ -9561,8 +9510,8 @@ var _user$project$Budget$update = F2(
 								headers: {ctor: '[]'},
 								url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
 								body: _elm_lang$http$Http$jsonBody(
-									_user$project$Model$encodeLive(_p9)),
-								expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeLive),
+									_user$project$Budget$encodeLive(_p10)),
+								expect: _elm_lang$http$Http$expectJson(_user$project$Budget$decodeLive),
 								timeout: _elm_lang$core$Maybe$Nothing,
 								withCredentials: false
 							});
@@ -9571,7 +9520,7 @@ var _user$project$Budget$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: _user$project$Model$Open(_p9)
+									live: _user$project$Budget$Open(_p10)
 								}),
 							{
 								ctor: '::',
@@ -9584,32 +9533,32 @@ var _user$project$Budget$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									live: A2(_user$project$Model$Closed, _p6._0, _p9)
+									live: A2(_user$project$Budget$Closed, _p7._0, _p10)
 								}),
 							{ctor: '[]'});
 					default:
 						var updateSpent = function (x) {
-							var _p7 = x;
-							if (_p7.ctor === 'Nothing') {
+							var _p8 = x;
+							if (_p8.ctor === 'Nothing') {
 								return _elm_lang$core$Maybe$Nothing;
 							} else {
-								var _p8 = _p7._0;
+								var _p9 = _p8._0;
 								return _elm_lang$core$Maybe$Just(
 									A2(
-										_user$project$Model$Activity,
-										_p8.budgeted,
+										_user$project$Budget$Activity,
+										_p9.budgeted,
 										{
 											ctor: '::',
-											_0: {start: _p6._0, stop: _p6._1, accurate: model.accuracy},
-											_1: _p8.spent
+											_0: {start: _p7._0, stop: _p7._1, accurate: model.accuracy},
+											_1: _p9.spent
 										}));
 							}
 						};
 						var new_model = _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								activities: A3(_elm_lang$core$Dict$update, _p0._0, updateSpent, model.activities),
-								live: _user$project$Model$NoTimer,
+								activities: A3(_elm_lang$core$Dict$update, _p3._0, updateSpent, model.activities),
+								live: _user$project$Budget$NoTimer,
 								accuracy: true
 							});
 						return A2(
@@ -9629,7 +9578,7 @@ var _user$project$Budget$update = F2(
 												headers: {ctor: '[]'},
 												url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
 												body: _elm_lang$http$Http$jsonBody(_elm_lang$core$Json_Encode$null),
-												expect: _elm_lang$http$Http$expectJson(_user$project$Model$decodeLive),
+												expect: _elm_lang$http$Http$expectJson(_user$project$Budget$decodeLive),
 												timeout: _elm_lang$core$Maybe$Nothing,
 												withCredentials: false
 											})),
@@ -9642,20 +9591,20 @@ var _user$project$Budget$update = F2(
 					_elm_lang$core$Maybe$withDefault,
 					0,
 					_elm_lang$core$Result$toMaybe(
-						_elm_lang$core$String$toInt(_p0._1)));
+						_elm_lang$core$String$toInt(_p3._1)));
 				var updateBudget = function (x) {
-					var _p10 = x;
-					if (_p10.ctor === 'Nothing') {
+					var _p11 = x;
+					if (_p11.ctor === 'Nothing') {
 						return _elm_lang$core$Maybe$Nothing;
 					} else {
 						return _elm_lang$core$Maybe$Just(
-							A2(_user$project$Model$Activity, amount, _p10._0.spent));
+							A2(_user$project$Budget$Activity, amount, _p11._0.spent));
 					}
 				};
 				var new_model = _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						activities: A3(_elm_lang$core$Dict$update, _p0._0, updateBudget, model.activities),
+						activities: A3(_elm_lang$core$Dict$update, _p3._0, updateBudget, model.activities),
 						message: 'Unsynced Changes'
 					});
 				return A2(
@@ -9692,8 +9641,8 @@ var _user$project$Budget$visible = function (model) {
 						_elm_lang$html$Html$div,
 						{ctor: '[]'},
 						function () {
-							var _p11 = model.live;
-							switch (_p11.ctor) {
+							var _p12 = model.live;
+							switch (_p12.ctor) {
 								case 'NoTimer':
 									return {
 										ctor: '::',
@@ -9729,7 +9678,7 @@ var _user$project$Budget$visible = function (model) {
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												_elm_lang$core$Basics$toString(_p11._0)),
+												_elm_lang$core$Basics$toString(_p12._0)),
 											_1: {
 												ctor: '::',
 												_0: A2(
@@ -9756,7 +9705,7 @@ var _user$project$Budget$visible = function (model) {
 												A2(_elm_lang$core$Basics_ops['++'], x, ' minutes'));
 										}(
 											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Time$inMinutes(_p11._1 - _p11._0))),
+												_elm_lang$core$Time$inMinutes(_p12._1 - _p12._0))),
 										_1: {
 											ctor: '::',
 											_0: A2(
@@ -9848,7 +9797,7 @@ var _user$project$Budget$visible = function (model) {
 							A2(
 								_elm_lang$core$List$sortBy,
 								function (activityPair) {
-									return _user$project$Model$urgency(
+									return _user$project$Budget$urgency(
 										_elm_lang$core$Tuple$second(activityPair));
 								},
 								_elm_lang$core$Dict$toList(model.activities))))),
@@ -9960,7 +9909,7 @@ var _user$project$Budget$main = _elm_lang$html$Html$program(
 	{
 		init: A2(
 			_elm_lang$core$Platform_Cmd_ops['!'],
-			_user$project$Model$init,
+			_user$project$Budget$init,
 			{
 				ctor: '::',
 				_0: _user$project$Budget$fetchActivities,

@@ -1,16 +1,124 @@
 module Budget exposing (main)
 
-import Model exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Maybe exposing (Maybe(..), withDefault)
 import Task exposing (perform)
 import Time exposing (..)
 import Dict
 import Tuple
 import Http exposing (send, get, Error(..))
-import Json.Decode
-import Json.Encode
+import Json.Decode as Decode
+import Json.Encode as Encode
+
+
+type alias Entry =
+    { start : Time
+    , stop : Time
+    , accurate : Bool
+    }
+
+
+duration : Entry -> Time
+duration e =
+    e.stop - e.start |> inMinutes
+
+
+type alias Activity =
+    { budgeted : Int
+    , spent : List Entry
+    }
+
+
+urgency : Activity -> Float
+urgency activity =
+    List.map duration activity.spent
+        |> List.sum
+        |> (-) (toFloat activity.budgeted)
+        |> abs
+
+
+type Timer
+    = NoTimer
+    | Open Time
+    | Closed Time Time
+
+
+type alias Model =
+    { activities : Dict.Dict String Activity
+    , live : Timer
+    , possibleName : String
+    , message : String
+    , haveSyncedOnce : Bool
+    , accuracy : Bool
+    }
+
+
+init =
+    { activities = Dict.empty
+    , live = NoTimer
+    , possibleName = ""
+    , message = ""
+    , haveSyncedOnce = False
+    , accuracy = True
+    }
+
+
+decodeLive =
+    Decode.nullable Decode.float
+
+
+decodeEntry =
+    Decode.map3 Entry
+        (Decode.field "start" Decode.float)
+        (Decode.field "stop" Decode.float)
+        (Decode.andThen decodeAccurate (Decode.maybe (Decode.field "accurate" Decode.bool)))
+
+
+decodeAccurate accurate =
+    Decode.succeed <| withDefault True accurate
+
+
+decodeActivity =
+    Decode.map2 Activity
+        (Decode.field "budgeted" Decode.int)
+        (Decode.andThen decodeSpent (Decode.maybe (Decode.field "spent" (Decode.list decodeEntry))))
+
+
+decodeSpent spent =
+    Decode.succeed <| withDefault [] spent
+
+
+decodeActivities =
+    Decode.dict decodeActivity
+
+
+encodeLive : Time.Time -> Encode.Value
+encodeLive =
+    Encode.float
+
+
+encodeEntry : Entry -> Encode.Value
+encodeEntry e =
+    Encode.object
+        [ ( "start", Encode.float e.start )
+        , ( "stop", Encode.float e.stop )
+        , ( "accurate", Encode.bool e.accurate )
+        ]
+
+
+encodeActivity a =
+    Encode.object
+        [ ( "budgeted", Encode.int a.budgeted )
+        , ( "spent", Encode.list (List.map encodeEntry a.spent) )
+        ]
+
+
+encodeActivities a =
+    Dict.toList a
+        |> List.map (\( k, v ) -> ( k, encodeActivity v ))
+        |> Encode.object
 
 
 main =
@@ -82,6 +190,24 @@ fetchLive =
         Http.get (urlBase ++ "live.json") decodeLive
 
 
+handleError model e =
+    case e of
+        Http.Timeout ->
+            { model | message = "timeout" } ! []
+
+        Http.NetworkError ->
+            { model | message = "network error" } ! []
+
+        Http.BadUrl x ->
+            { model | message = "badurl:\n" ++ x } ! []
+
+        Http.BadStatus x ->
+            { model | message = "badstatus:\n" ++ (toString x) } ! []
+
+        Http.BadPayload x y ->
+            { model | message = "badpayload:\n" ++ x ++ "\n" ++ (toString y) } ! []
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -92,49 +218,6 @@ update msg model =
 
                 Just t ->
                     { model | live = Open t } ! []
-
-        CommitLive (Err e) ->
-            case e of
-                Http.Timeout ->
-                    { model | message = "timeout" } ! []
-
-                Http.NetworkError ->
-                    { model | message = "network error" } ! []
-
-                Http.BadUrl x ->
-                    { model | message = "badurl:\n" ++ x } ! []
-
-                Http.BadStatus x ->
-                    { model | message = "badstatus:\n" ++ (toString x) } ! []
-
-                Http.BadPayload x y ->
-                    { model | message = "badpayload:\n" ++ x ++ "\n" ++ (toString y) } ! []
-
-        Discard ->
-            { model
-                | live = NoTimer
-                , message = "Timer Deleted"
-            }
-                ! []
-
-        TurnNewLeaf ->
-            { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
-
-        SendNewLeaf time ->
-            let
-                name =
-                    "new-leaf-" ++ (toString time)
-
-                sendNewLeaf =
-                    Http.send (CommitActivities NewLeaf) <| putRequest model name
-            in
-                { model | message = "Sending New Leaf" } ! [ sendNewLeaf ]
-
-        ToggleAccuracy ->
-            { model | accuracy = not model.accuracy } ! []
-
-        FetchActivities ->
-            { model | message = "Fetching Activities" } ! [ fetchActivities ]
 
         CommitActivities behavior (Ok newActivities) ->
             case behavior of
@@ -163,22 +246,37 @@ update msg model =
                     }
                         ! []
 
+        CommitLive (Err e) ->
+            handleError model e
+
         CommitActivities _ (Err e) ->
-            case e of
-                Http.Timeout ->
-                    { model | message = "timeout" } ! []
+            handleError model e
 
-                Http.NetworkError ->
-                    { model | message = "network error" } ! []
+        Discard ->
+            { model
+                | live = NoTimer
+                , message = "Timer Deleted"
+            }
+                ! []
 
-                Http.BadUrl x ->
-                    { model | message = "badurl:\n" ++ x } ! []
+        TurnNewLeaf ->
+            { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
 
-                Http.BadStatus x ->
-                    { model | message = "badstatus:\n" ++ (toString x) } ! []
+        SendNewLeaf time ->
+            let
+                name =
+                    "new-leaf-" ++ (toString time)
 
-                Http.BadPayload x y ->
-                    { model | message = "badpayload:\n" ++ x ++ "\n" ++ (toString y) } ! []
+                sendNewLeaf =
+                    Http.send (CommitActivities NewLeaf) <| putRequest model name
+            in
+                { model | message = "Sending New Leaf" } ! [ sendNewLeaf ]
+
+        ToggleAccuracy ->
+            { model | accuracy = not model.accuracy } ! []
+
+        FetchActivities ->
+            { model | message = "Fetching Activities" } ! [ fetchActivities ]
 
         SendActivities _ ->
             { model | message = "Sending Activities" } ! [ sendActivities model ]
@@ -260,7 +358,7 @@ update msg model =
                                         { method = "PUT"
                                         , headers = []
                                         , url = urlBase ++ "live.json"
-                                        , body = Http.jsonBody Json.Encode.null
+                                        , body = Http.jsonBody Encode.null
                                         , expect = Http.expectJson decodeLive
                                         , timeout = Nothing
                                         , withCredentials = False
@@ -339,7 +437,7 @@ visible model =
             ]
         , table [ id "list" ]
             (Dict.toList model.activities
-                |> List.sortBy (\activityPair -> Model.urgency (Tuple.second activityPair))
+                |> List.sortBy (\activityPair -> urgency (Tuple.second activityPair))
                 |> List.map activityRow
                 |> List.reverse
             )
@@ -356,7 +454,7 @@ visible model =
 
 onBlurWithTargetValue : (String -> msg) -> Attribute msg
 onBlurWithTargetValue tagger =
-    on "blur" (Json.Decode.map tagger targetValue)
+    on "blur" (Decode.map tagger targetValue)
 
 
 activityRow x =
