@@ -9387,23 +9387,7 @@ var _user$project$Budget$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{live: _user$project$Budget$NoTimer, message: 'Timer Deleted'}),
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$http$Http$send,
-							_user$project$Budget$CommitLive,
-							_elm_lang$http$Http$request(
-								{
-									method: 'PUT',
-									headers: {ctor: '[]'},
-									url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
-									body: _elm_lang$http$Http$jsonBody(_elm_lang$core$Json_Encode$null),
-									expect: _elm_lang$http$Http$expectJson(_user$project$Budget$decodeLive),
-									timeout: _elm_lang$core$Maybe$Nothing,
-									withCredentials: false
-								})),
-						_1: {ctor: '[]'}
-					});
+					{ctor: '[]'});
 			case 'TurnNewLeaf':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9669,15 +9653,22 @@ var _user$project$Budget$visible = function (model) {
 											_1: {
 												ctor: '::',
 												_0: A2(
-													_elm_lang$html$Html$button,
+													_elm_lang$html$Html$div,
+													{ctor: '[]'},
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
-														_1: {ctor: '[]'}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text('Discard'),
+														_0: A2(
+															_elm_lang$html$Html$button,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('Discard'),
+																_1: {ctor: '[]'}
+															}),
 														_1: {ctor: '[]'}
 													}),
 												_1: {ctor: '[]'}
@@ -9725,40 +9716,47 @@ var _user$project$Budget$visible = function (model) {
 											_1: {
 												ctor: '::',
 												_0: A2(
-													_elm_lang$html$Html$button,
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
-														_1: {ctor: '[]'}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text('Discard'),
-														_1: {ctor: '[]'}
-													}),
+													_elm_lang$html$Html$div,
+													{ctor: '[]'},
+													A2(
+														_elm_lang$core$List$map,
+														function (x) {
+															return A2(
+																_elm_lang$html$Html$button,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(
+																		A2(_user$project$Budget$GotEventTimer, x, 0)),
+																	_1: {ctor: '[]'}
+																},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text(x),
+																	_1: {ctor: '[]'}
+																});
+														},
+														_elm_lang$core$Dict$keys(model.activities))),
 												_1: {
 													ctor: '::',
 													_0: A2(
 														_elm_lang$html$Html$div,
 														{ctor: '[]'},
-														A2(
-															_elm_lang$core$List$map,
-															function (x) {
-																return A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			A2(_user$project$Budget$GotEventTimer, x, 0)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text(x),
-																		_1: {ctor: '[]'}
-																	});
-															},
-															_elm_lang$core$Dict$keys(model.activities))),
+														{
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$button,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
+																	_1: {ctor: '[]'}
+																},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text('Discard'),
+																	_1: {ctor: '[]'}
+																}),
+															_1: {ctor: '[]'}
+														}),
 													_1: {ctor: '[]'}
 												}
 											}

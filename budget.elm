@@ -247,17 +247,7 @@ update msg model =
                 | live = NoTimer
                 , message = "Timer Deleted"
             }
-                ! [ Http.send CommitLive <|
-                        Http.request
-                            { method = "PUT"
-                            , headers = []
-                            , url = urlBase ++ "live.json"
-                            , body = Http.jsonBody Encode.null
-                            , expect = Http.expectJson decodeLive
-                            , timeout = Nothing
-                            , withCredentials = False
-                            }
-                  ]
+                ! []
 
         TurnNewLeaf ->
             { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
@@ -400,7 +390,7 @@ visible model =
                     Open time ->
                         [ button [ onClick CycleEventTimer ] [ text "Stop Timer" ]
                         , text (toString time)
-                        , button [ onClick Discard ] [ text "Discard" ]
+                        , div [] [ button [ onClick Discard ] [ text "Discard" ] ]
                         ]
 
                     Closed start stop ->
@@ -420,13 +410,13 @@ visible model =
                                 []
                             , text "Accurate"
                             ]
-                        , button [ onClick Discard ] [ text "Discard" ]
                         , Dict.keys model.activities
                             |> List.map
                                 (\x ->
                                     button [ onClick (GotEventTimer x 0) ] [ text x ]
                                 )
                             |> div []
+                        , div [] [ button [ onClick Discard ] [ text "Discard" ] ]
                         ]
             ]
         , table [ id "list" ]
