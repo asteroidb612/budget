@@ -126,16 +126,8 @@ main =
         { init = init ! [ fetchActivities, fetchLive ]
         , view = view
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         }
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    if model.haveSyncedOnce then
-        Time.every (30 * Time.second) SendActivities
-    else
-        Sub.none
 
 
 type ServerReaction
@@ -149,9 +141,7 @@ type Msg
     | CycleEventTimer
     | GotEventTimer String Time
     | Budget String String
-    | SendActivities Time.Time
     | CommitActivities ServerReaction (Result Http.Error (Dict.Dict String Activity))
-    | FetchActivities
     | ToggleAccuracy
     | TurnNewLeaf
     | SendNewLeaf Time.Time
@@ -257,7 +247,17 @@ update msg model =
                 | live = NoTimer
                 , message = "Timer Deleted"
             }
-                ! []
+                ! [ Http.send CommitLive <|
+                        Http.request
+                            { method = "PUT"
+                            , headers = []
+                            , url = urlBase ++ "live.json"
+                            , body = Http.jsonBody Encode.null
+                            , expect = Http.expectJson decodeLive
+                            , timeout = Nothing
+                            , withCredentials = False
+                            }
+                  ]
 
         TurnNewLeaf ->
             { model | message = "Turning New Leaf" } ! [ Task.perform SendNewLeaf now ]
@@ -274,12 +274,6 @@ update msg model =
 
         ToggleAccuracy ->
             { model | accuracy = not model.accuracy } ! []
-
-        FetchActivities ->
-            { model | message = "Fetching Activities" } ! [ fetchActivities ]
-
-        SendActivities _ ->
-            { model | message = "Sending Activities" } ! [ sendActivities model ]
 
         NewActivity ->
             let
@@ -443,11 +437,7 @@ visible model =
             )
         , input [ value model.possibleName, onInput ActivityTyping ] []
         , button [ onClick NewActivity ] [ text "Add Activity" ]
-        , div []
-            [ button [ onClick (SendActivities 0) ] [ text "Send Activities" ]
-            , button [ onClick FetchActivities ] [ text "Fetch Activities" ]
-            , button [ onClick TurnNewLeaf ] [ text "Turn New Leaf" ]
-            ]
+        , div [] [ button [ onClick TurnNewLeaf ] [ text "Turn New Leaf" ] ]
         , div [] [ text model.message ]
         ]
 

@@ -9233,7 +9233,6 @@ var _user$project$Budget$SendNewLeaf = function (a) {
 };
 var _user$project$Budget$TurnNewLeaf = {ctor: 'TurnNewLeaf'};
 var _user$project$Budget$ToggleAccuracy = {ctor: 'ToggleAccuracy'};
-var _user$project$Budget$FetchActivities = {ctor: 'FetchActivities'};
 var _user$project$Budget$CommitActivities = F2(
 	function (a, b) {
 		return {ctor: 'CommitActivities', _0: a, _1: b};
@@ -9251,12 +9250,6 @@ var _user$project$Budget$fetchActivities = A2(
 		_elm_lang$http$Http$get,
 		A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'activities.json'),
 		_user$project$Budget$decodeActivities));
-var _user$project$Budget$SendActivities = function (a) {
-	return {ctor: 'SendActivities', _0: a};
-};
-var _user$project$Budget$subscriptions = function (model) {
-	return model.haveSyncedOnce ? A2(_elm_lang$core$Time$every, 30 * _elm_lang$core$Time$second, _user$project$Budget$SendActivities) : _elm_lang$core$Platform_Sub$none;
-};
 var _user$project$Budget$Budget = F2(
 	function (a, b) {
 		return {ctor: 'Budget', _0: a, _1: b};
@@ -9394,7 +9387,23 @@ var _user$project$Budget$update = F2(
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{live: _user$project$Budget$NoTimer, message: 'Timer Deleted'}),
-					{ctor: '[]'});
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$http$Http$send,
+							_user$project$Budget$CommitLive,
+							_elm_lang$http$Http$request(
+								{
+									method: 'PUT',
+									headers: {ctor: '[]'},
+									url: A2(_elm_lang$core$Basics_ops['++'], _user$project$Budget$urlBase, 'live.json'),
+									body: _elm_lang$http$Http$jsonBody(_elm_lang$core$Json_Encode$null),
+									expect: _elm_lang$http$Http$expectJson(_user$project$Budget$decodeLive),
+									timeout: _elm_lang$core$Maybe$Nothing,
+									withCredentials: false
+								})),
+						_1: {ctor: '[]'}
+					});
 			case 'TurnNewLeaf':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -9432,28 +9441,6 @@ var _user$project$Budget$update = F2(
 						model,
 						{accuracy: !model.accuracy}),
 					{ctor: '[]'});
-			case 'FetchActivities':
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{message: 'Fetching Activities'}),
-					{
-						ctor: '::',
-						_0: _user$project$Budget$fetchActivities,
-						_1: {ctor: '[]'}
-					});
-			case 'SendActivities':
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{message: 'Sending Activities'}),
-					{
-						ctor: '::',
-						_0: _user$project$Budget$sendActivities(model),
-						_1: {ctor: '[]'}
-					});
 			case 'NewActivity':
 				var name = model.possibleName;
 				var new_model = _elm_lang$core$Native_Utils.update(
@@ -9840,46 +9827,15 @@ var _user$project$Budget$visible = function (model) {
 										_elm_lang$html$Html$button,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(
-												_user$project$Budget$SendActivities(0)),
+											_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$TurnNewLeaf),
 											_1: {ctor: '[]'}
 										},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Send Activities'),
+											_0: _elm_lang$html$Html$text('Turn New Leaf'),
 											_1: {ctor: '[]'}
 										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$button,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$FetchActivities),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('Fetch Activities'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$button,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$TurnNewLeaf),
-													_1: {ctor: '[]'}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text('Turn New Leaf'),
-													_1: {ctor: '[]'}
-												}),
-											_1: {ctor: '[]'}
-										}
-									}
+									_1: {ctor: '[]'}
 								}),
 							_1: {
 								ctor: '::',
@@ -9921,7 +9877,9 @@ var _user$project$Budget$main = _elm_lang$html$Html$program(
 			}),
 		view: _user$project$Budget$view,
 		update: _user$project$Budget$update,
-		subscriptions: _user$project$Budget$subscriptions
+		subscriptions: function (_p13) {
+			return _elm_lang$core$Platform_Sub$none;
+		}
 	})();
 var Elm = {};
 Elm['Budget'] = Elm['Budget'] || {};
