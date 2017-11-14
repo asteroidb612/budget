@@ -290,6 +290,13 @@ update msg model =
 
 
 view model =
+    if model.haveSyncedOnce then
+        (visible model)
+    else
+        div [] []
+
+
+visible model =
     div [ id "topBar" ]
         [ div []
             [ div [] <|

@@ -9673,7 +9673,7 @@ var _user$project$Budget$NewActivity = {ctor: 'NewActivity'};
 var _user$project$Budget$ActivityTyping = function (a) {
 	return {ctor: 'ActivityTyping', _0: a};
 };
-var _user$project$Budget$view = function (model) {
+var _user$project$Budget$visible = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -9949,6 +9949,12 @@ var _user$project$Budget$view = function (model) {
 				}
 			}
 		});
+};
+var _user$project$Budget$view = function (model) {
+	return model.haveSyncedOnce ? _user$project$Budget$visible(model) : A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{ctor: '[]'});
 };
 var _user$project$Budget$main = _elm_lang$html$Html$program(
 	{
