@@ -9254,72 +9254,6 @@ var _user$project$Budget$Budget = F2(
 	function (a, b) {
 		return {ctor: 'Budget', _0: a, _1: b};
 	});
-var _user$project$Budget$activityRow = function (x) {
-	var activity = _elm_lang$core$Tuple$second(x);
-	var kinda = A2(
-		_elm_lang$core$List$all,
-		function (_) {
-			return _.accurate;
-		},
-		activity.spent) ? '' : '~';
-	var activityLabel = _elm_lang$core$Tuple$first(x);
-	return A2(
-		_elm_lang$html$Html$tr,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$td,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text(activityLabel),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$td,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$value(
-									_elm_lang$core$Basics$toString(activity.budgeted)),
-								_1: {
-									ctor: '::',
-									_0: _user$project$Budget$onBlurWithTargetValue(
-										_user$project$Budget$Budget(activityLabel)),
-									_1: {ctor: '[]'}
-								}
-							},
-							{ctor: '[]'}),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$td,
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									kinda,
-									_elm_lang$core$Basics$toString(
-										_elm_lang$core$List$sum(
-											A2(_elm_lang$core$List$map, _user$project$Budget$duration, activity.spent))))),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			}
-		});
-};
 var _user$project$Budget$GotEventTimer = F2(
 	function (a, b) {
 		return {ctor: 'GotEventTimer', _0: a, _1: b};
@@ -9588,6 +9522,93 @@ var _user$project$Budget$update = F2(
 					});
 		}
 	});
+var _user$project$Budget$activityRow = F2(
+	function (timer, x) {
+		var activity = _elm_lang$core$Tuple$second(x);
+		var kinda = A2(
+			_elm_lang$core$List$all,
+			function (_) {
+				return _.accurate;
+			},
+			activity.spent) ? '' : '~';
+		var activityLabel = _elm_lang$core$Tuple$first(x);
+		var labelOrButton = function () {
+			var _p12 = timer;
+			if (_p12.ctor === 'Closed') {
+				return A2(
+					_elm_lang$html$Html$button,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Events$onClick(
+							A2(_user$project$Budget$GotEventTimer, activityLabel, 0)),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(activityLabel),
+						_1: {ctor: '[]'}
+					});
+			} else {
+				return _elm_lang$html$Html$text(activityLabel);
+			}
+		}();
+		return A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: labelOrButton,
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$input,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$value(
+										_elm_lang$core$Basics$toString(activity.budgeted)),
+									_1: {
+										ctor: '::',
+										_0: _user$project$Budget$onBlurWithTargetValue(
+											_user$project$Budget$Budget(activityLabel)),
+										_1: {ctor: '[]'}
+									}
+								},
+								{ctor: '[]'}),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{ctor: '[]'},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										kinda,
+										_elm_lang$core$Basics$toString(
+											_elm_lang$core$List$sum(
+												A2(_elm_lang$core$List$map, _user$project$Budget$duration, activity.spent))))),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
 var _user$project$Budget$CycleEventTimer = {ctor: 'CycleEventTimer'};
 var _user$project$Budget$NewActivity = {ctor: 'NewActivity'};
 var _user$project$Budget$ActivityTyping = function (a) {
@@ -9612,8 +9633,8 @@ var _user$project$Budget$visible = function (model) {
 						_elm_lang$html$Html$div,
 						{ctor: '[]'},
 						function () {
-							var _p12 = model.live;
-							switch (_p12.ctor) {
+							var _p13 = model.live;
+							switch (_p13.ctor) {
 								case 'NoTimer':
 									return {
 										ctor: '::',
@@ -9649,7 +9670,7 @@ var _user$project$Budget$visible = function (model) {
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												_elm_lang$core$Basics$toString(_p12._0)),
+												_elm_lang$core$Basics$toString(_p13._0)),
 											_1: {
 												ctor: '::',
 												_0: A2(
@@ -9683,7 +9704,7 @@ var _user$project$Budget$visible = function (model) {
 												A2(_elm_lang$core$Basics_ops['++'], x, ' minutes'));
 										}(
 											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Time$inMinutes(_p12._1 - _p12._0))),
+												_elm_lang$core$Time$inMinutes(_p13._1 - _p13._0))),
 										_1: {
 											ctor: '::',
 											_0: A2(
@@ -9718,47 +9739,23 @@ var _user$project$Budget$visible = function (model) {
 												_0: A2(
 													_elm_lang$html$Html$div,
 													{ctor: '[]'},
-													A2(
-														_elm_lang$core$List$map,
-														function (x) {
-															return A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		A2(_user$project$Budget$GotEventTimer, x, 0)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text(x),
-																	_1: {ctor: '[]'}
-																});
-														},
-														_elm_lang$core$Dict$keys(model.activities))),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$div,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('Discard'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {ctor: '[]'}
-												}
+													{
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$button,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Events$onClick(_user$project$Budget$Discard),
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('Discard'),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}),
+												_1: {ctor: '[]'}
 											}
 										}
 									};
@@ -9778,7 +9775,7 @@ var _user$project$Budget$visible = function (model) {
 					_elm_lang$core$List$reverse(
 						A2(
 							_elm_lang$core$List$map,
-							_user$project$Budget$activityRow,
+							_user$project$Budget$activityRow(model.live),
 							A2(
 								_elm_lang$core$List$sortBy,
 								function (activityPair) {
@@ -9875,7 +9872,7 @@ var _user$project$Budget$main = _elm_lang$html$Html$program(
 			}),
 		view: _user$project$Budget$view,
 		update: _user$project$Budget$update,
-		subscriptions: function (_p13) {
+		subscriptions: function (_p14) {
 			return _elm_lang$core$Platform_Sub$none;
 		}
 	})();

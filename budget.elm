@@ -410,19 +410,13 @@ visible model =
                                 []
                             , text "Accurate"
                             ]
-                        , Dict.keys model.activities
-                            |> List.map
-                                (\x ->
-                                    button [ onClick (GotEventTimer x 0) ] [ text x ]
-                                )
-                            |> div []
                         , div [] [ button [ onClick Discard ] [ text "Discard" ] ]
                         ]
             ]
         , table [ id "list" ]
             (Dict.toList model.activities
                 |> List.sortBy (\activityPair -> urgency (Tuple.second activityPair))
-                |> List.map activityRow
+                |> List.map (activityRow model.live)
                 |> List.reverse
             )
         , input [ value model.possibleName, onInput ActivityTyping ] []
@@ -437,7 +431,7 @@ onBlurWithTargetValue tagger =
     on "blur" (Decode.map tagger targetValue)
 
 
-activityRow x =
+activityRow timer x =
     let
         activityLabel =
             Tuple.first x
@@ -450,9 +444,17 @@ activityRow x =
                 ""
             else
                 "~"
+
+        labelOrButton =
+            case timer of
+                Closed _ _ ->
+                    button [ onClick (GotEventTimer activityLabel 0) ] [ text activityLabel ]
+
+                _ ->
+                    text activityLabel
     in
         tr []
-            [ td [] [ text activityLabel ]
+            [ td [] [ labelOrButton ]
             , td []
                 [ input
                     [ value <| toString activity.budgeted
