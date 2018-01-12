@@ -17,6 +17,7 @@ type alias Entry =
     { start : Time
     , stop : Time
     , accurate : Bool
+    , comment : String
     }
 
 
@@ -49,6 +50,7 @@ type alias Model =
     { activities : Dict.Dict String Activity
     , live : Timer
     , possibleName : String
+    , possibleComment : String
     , message : String
     , haveSyncedOnce : Bool
     , accuracy : Bool
@@ -59,6 +61,7 @@ init =
     { activities = Dict.empty
     , live = NoTimer
     , possibleName = ""
+    , possibleComment = ""
     , message = ""
     , haveSyncedOnce = False
     , accuracy = True
@@ -70,28 +73,38 @@ decodeLive =
 
 
 decodeEntry =
-    Decode.map3 Entry
-        (Decode.field "start" Decode.float)
-        (Decode.field "stop" Decode.float)
-        (Decode.andThen decodeAccurate (Decode.maybe (Decode.field "accurate" Decode.bool)))
+    let
+        partial =
+            Decode.map4 Entry
+                (Decode.field "start" Decode.float)
+                (Decode.field "stop" Decode.float)
 
+        commentMigration =
+            partial (Decode.field "accurate" Decode.bool) (Decode.field "comment" Decode.string)
 
-decodeAccurate accurate =
-    Decode.succeed <| withDefault True accurate
+        accuracyMigration =
+            partial (Decode.field "accurate" Decode.bool) (Decode.succeed "")
 
-
-decodeActivity =
-    Decode.map2 Activity
-        (Decode.field "budgeted" Decode.int)
-        (Decode.andThen decodeSpent (Decode.maybe (Decode.field "spent" (Decode.list decodeEntry))))
-
-
-decodeSpent spent =
-    Decode.succeed <| withDefault [] spent
+        original =
+            partial (Decode.succeed True) (Decode.succeed "")
+    in
+        Decode.oneOf [ commentMigration, accuracyMigration, original ]
 
 
 decodeActivities =
-    Decode.dict decodeActivity
+    let
+        partial =
+            Decode.map2 Activity (Decode.field "budgeted" Decode.int)
+
+        decodeActivity =
+            Decode.oneOf
+                [ partial
+                    (Decode.field "spent" (Decode.list decodeEntry))
+                , partial
+                    (Decode.succeed [])
+                ]
+    in
+        Decode.dict decodeActivity
 
 
 encodeLive : Time.Time -> Encode.Value
@@ -105,6 +118,7 @@ encodeEntry e =
         [ ( "start", Encode.float e.start )
         , ( "stop", Encode.float e.stop )
         , ( "accurate", Encode.bool e.accurate )
+        , ( "comment", Encode.string e.comment )
         ]
 
 
@@ -137,6 +151,7 @@ type ServerReaction
 
 type Msg
     = ActivityTyping String
+    | CommentTyping String
     | NewActivity
     | CycleEventTimer
     | GotEventTimer String Time
@@ -287,6 +302,12 @@ update msg model =
             }
                 ! []
 
+        CommentTyping str ->
+            { model
+                | possibleComment = str
+            }
+                ! []
+
         CycleEventTimer ->
             model ! [ Task.perform (GotEventTimer "") now ]
 
@@ -324,6 +345,7 @@ update msg model =
                                             ({ start = start
                                              , stop = stop
                                              , accurate = model.accuracy
+                                             , comment = model.possibleComment
                                              }
                                                 :: y.spent
                                             )
@@ -390,7 +412,6 @@ visible model =
                     Open time ->
                         [ button [ onClick CycleEventTimer ] [ text "Stop Timer" ]
                         , text (toString time)
-                        , div [] [ button [ onClick Discard ] [ text "Discard" ] ]
                         ]
 
                     Closed start stop ->
@@ -401,16 +422,19 @@ visible model =
                                 x
                                     ++ " minutes"
                                     |> text
-                        , label []
-                            [ input
-                                [ type_ "checkbox"
-                                , checked model.accuracy
-                                , onClick ToggleAccuracy
+                        , button [ onClick Discard ] [ text "Discard" ]
+                        , div []
+                            [ label []
+                                [ input
+                                    [ type_ "checkbox"
+                                    , checked model.accuracy
+                                    , onClick ToggleAccuracy
+                                    ]
+                                    []
+                                , text "Accurate"
                                 ]
-                                []
-                            , text "Accurate"
+                            , input [ value model.possibleComment, onInput CommentTyping, placeholder "Comments?" ] []
                             ]
-                        , div [] [ button [ onClick Discard ] [ text "Discard" ] ]
                         ]
             ]
         , table [ id "list" ]
